@@ -7,6 +7,29 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TrackingEngineTest {
+    @Test fun revokedBusAccessStopsCollectionWithoutInventingAJourneyEnd() = runBlocking {
+        for (kind in listOf(FailureKind.FORBIDDEN, FailureKind.UNAUTHORIZED)) {
+            var reads = 0
+            var ends = 0
+            val engine = TrackingEngine(vehiclePosition = {
+                reads++; DomainResult.Error(Failure(kind))
+            }, endJourney = { ends++; DomainResult.Success(Delivery.ACKNOWLEDGED) })
+            val sample = Position(-12.0, -77.0, 10.0, Instant.EPOCH)
+            engine.tick(sample, Instant.EPOCH)
+            assertEquals(TrackingStatus.MANUAL_ONLY, engine.state.value.status)
+            assertEquals(kind, engine.state.value.failure?.kind)
+            assertFalse(engine.shouldCollectLocation)
+            engine.tick(sample, Instant.EPOCH)
+            assertEquals(1, reads)
+            assertEquals(0, ends)
+        }
+    }
+    @Test fun missingBusIdentifierStopsCollectionAndKeepsManualCompletion() = runBlocking {
+        val engine = TrackingEngine()
+        engine.tick(Position(-12.0, -77.0, 10.0, Instant.EPOCH), Instant.EPOCH)
+        assertEquals(TrackingStatus.MANUAL_ONLY, engine.state.value.status)
+        assertFalse(engine.shouldCollectLocation)
+    }
     @Test fun cadenceAccountsForNetworkTimeAndKeepsPassengerComparisonsBelowThirtySeconds() {
         assertEquals(29_000L, trackingDelayMillis(true, 1000))
         assertEquals(14_000L, trackingDelayMillis(false, 1000))

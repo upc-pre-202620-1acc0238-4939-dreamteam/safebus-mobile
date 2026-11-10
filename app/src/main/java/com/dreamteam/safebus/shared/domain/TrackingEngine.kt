@@ -21,6 +21,7 @@ class TrackingEngine(private val sendPosition: (suspend (Position) -> DomainResu
     private val separation = SeparationDetector()
     private var sentAt: Instant? = null
     private var stopped = false
+    val shouldCollectLocation: Boolean get() = !stopped
     fun stop() { stopped = true; separation.reset(); mutable.value = TrackingState() }
     fun unavailable() { separation.reset(); mutable.value = TrackingState(TrackingStatus.MANUAL_ONLY) }
     suspend fun tick(position: Position?, now: Instant) {
@@ -39,9 +40,13 @@ class TrackingEngine(private val sendPosition: (suspend (Position) -> DomainResu
             }
             return
         }
-        if (vehiclePosition == null || endJourney == null) { unavailable(); return }
+        if (vehiclePosition == null || endJourney == null) { unavailable(); stopped = true; return }
         when (val result = vehiclePosition.invoke()) {
-            is DomainResult.Error -> { separation.reset(); mutable.value = TrackingState(TrackingStatus.MANUAL_ONLY, result.failure) }
+            is DomainResult.Error -> {
+                separation.reset()
+                if (result.failure.kind in setOf(FailureKind.FORBIDDEN, FailureKind.UNAUTHORIZED)) stopped = true
+                mutable.value = TrackingState(TrackingStatus.MANUAL_ONLY, result.failure)
+            }
             is DomainResult.Success -> {
                 val summary = separation.compare(position, result.value, now)
                 mutable.value = TrackingState(if (position.reliableAt(now) && result.value.reliableAt(now)) TrackingStatus.TRACKING else TrackingStatus.MANUAL_ONLY, lastSample = position.capturedAt)

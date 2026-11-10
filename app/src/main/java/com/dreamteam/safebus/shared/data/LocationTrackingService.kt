@@ -55,6 +55,7 @@ class LocationTrackingService : Service(), LocationListener {
                 val tracker = active.tracker ?: break
                 tracker.tick(latest, Instant.now())
                 active.updateTracking()
+                if (!tracker.shouldCollectLocation) break
                 active.outbox.flush()
                 delay(trackingDelayMillis(active.session.role == Role.DRIVER, SystemClock.elapsedRealtime() - beganAt))
             }
