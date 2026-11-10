@@ -23,6 +23,7 @@ class SafetyViewModel(private val repository: SafetyRepository, dispatcher: Coro
     fun attend(id: String) = decision { repository.attend(id) }
     fun close(id: String, outcome: String, response: String) = decision { repository.close(id, outcome, response) }
     private fun decision(action: suspend () -> DomainResult<Unit>) = execute { old ->
+        update(old.copy(decisionSaved = false))
         when (val result = action()) {
             is DomainResult.Error -> result
             is DomainResult.Success -> {

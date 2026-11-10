@@ -202,6 +202,27 @@
     <string name="core_end_journey_detail">Se desvinculará tu cuenta del bus. Conservarás tus solicitudes y sus respuestas.</string>
     <string name="core_journey_ended">Tu viaje finalizó en este dispositivo.</string>
     <string name="core_company_verified">Empresa validada</string>
+    <string name="core_my_alerts">Mis alertas</string>
+    <string name="core_my_requests">Mis solicitudes</string>
+    <string name="core_bus_alerts">Alertas del bus</string>
+    <string name="core_emergencies">Emergencias</string>
+    <string name="core_reviews">Revisiones</string>
+    <string name="core_request_message">Describe el incidente (1–500 caracteres)</string>
+    <string name="core_request_explanation">Incluye una fotografía del incidente. Se necesitan 3 pasajeros distintos en 5 minutos para solicitar revisión; la empresa decide si activa una emergencia.</string>
+    <string name="core_send_request">Enviar solicitud</string>
+    <string name="core_view_photo">Ver evidencia privada</string>
+    <string name="core_contributors">%1$d de 3 pasajeros</string>
+    <string name="core_case_reference">Referencia: %1$s</string>
+    <string name="core_bus_reference">Bus %1$d</string>
+    <string name="core_approve">Aprobar emergencia</string>
+    <string name="core_decline">Rechazar agrupación</string>
+    <string name="core_attend">Iniciar atención</string>
+    <string name="core_close_emergency">Cerrar emergencia</string>
+    <string name="core_decision_reason">Motivo o resultado (obligatorio)</string>
+    <string name="core_decision_response">Respuesta para el usuario (opcional)</string>
+    <string name="core_decision_saved">El servidor confirmó la operación.</string>
+    <string name="core_approve_detail">Se activará una emergencia de pasajeros con prioridad alta para esta agrupación.</string>
+    <string name="core_attend_detail">Tu cuenta quedará registrada como responsable de la atención.</string>
 </resources>
 
 
