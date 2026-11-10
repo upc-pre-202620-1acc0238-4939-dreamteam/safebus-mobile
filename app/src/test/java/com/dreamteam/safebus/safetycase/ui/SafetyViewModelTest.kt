@@ -3,6 +3,8 @@ package com.dreamteam.safebus.safetycase.ui
 import com.dreamteam.safebus.safetycase.domain.*
 import com.dreamteam.safebus.shared.domain.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import org.junit.Assert.*
 import org.junit.Test
@@ -28,6 +30,18 @@ open class SafetyFake : SafetyRepository {
 }
 
 class SafetyViewModelTest {
+    @Test fun changingJourneyDiscardsInFlightPublicHistoryAndFailedEvidenceClearsPreviousPhoto() = runBlocking {
+        val response = CompletableDeferred<DomainResult<List<SafetyEntry>>>()
+        val repo = object : SafetyFake() { override suspend fun history(busId: Long) = response.await() }
+        val model = SafetyViewModel(repo, Dispatchers.Unconfined)
+        model.history(1); model.clearHistory()
+        response.complete(DomainResult.Success(listOf(SafetyEntry("old", "DRIVER", "ACTIVE", Instant.EPOCH, null))))
+        assertTrue(model.state.value.value.history.isEmpty())
+        model.evidence("own", false); assertNotNull(model.state.value.value.evidence)
+        repo.failure = Failure.fromStatus(403); model.evidence("foreign", false)
+        assertEquals(FailureKind.FORBIDDEN, model.state.value.failure?.kind)
+        assertNull(model.state.value.value.evidence); assertEquals(0, repo.writes)
+    }
     @Test fun requiresEvidenceAndReflectsRejectedRequestsWithoutSaving() {
         val repo = SafetyFake(); val model = SafetyViewModel(repo, Dispatchers.Unconfined)
         model.submit(1, "Message", null)

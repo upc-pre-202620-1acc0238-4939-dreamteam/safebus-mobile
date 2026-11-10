@@ -102,7 +102,7 @@ fun failureText(failure: Failure): Int = when (failure.code) {
         "COLLECTING", "COUNTED" -> R.string.core_status_collecting
         "AWAITING_APPROVAL" -> R.string.core_status_review
         "APPROVED" -> R.string.core_status_approved
-        "DECLINED" -> R.string.core_status_declined
+        "DECLINED", "NOT_APPROVED" -> R.string.core_status_declined
         "EXPIRED" -> R.string.core_status_expired
         "ATTACHED" -> R.string.core_status_attached
         "LATE" -> R.string.core_status_late

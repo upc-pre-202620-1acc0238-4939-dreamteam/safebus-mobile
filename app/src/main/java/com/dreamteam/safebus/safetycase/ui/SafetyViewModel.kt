@@ -10,12 +10,24 @@ data class SafetyState(val requests: List<PassengerRequest> = emptyList(), val d
     val receipt: Receipt? = null, val decisionSaved: Boolean = false, val loaded: Boolean = false)
 
 class SafetyViewModel(private val repository: SafetyRepository, dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate) : TaskViewModel<SafetyState>(SafetyState(), dispatcher) {
+    private var historyBus: Long? = null
     fun requests() = execute { old -> repository.mine().map { old.copy(requests = it, loaded = true) } }
     fun alerts() = execute { old -> repository.driverAlerts().map { old.copy(driverAlerts = it, loaded = true) } }
     fun review() = execute { old -> repository.queue().map { old.copy(queue = it, loaded = true) } }
-    fun history(busId: Long?) = execute { old -> if (busId == null) invalid("BUS_ID_UNAVAILABLE") else repository.history(busId).map { old.copy(history = it, loaded = true) } }
+    fun history(busId: Long?) {
+        if (historyBus != busId) { historyBus = busId; update(state.value.value.copy(history = emptyList(), loaded = false)) }
+        execute { old ->
+            if (busId == null) invalid("BUS_ID_UNAVAILABLE") else repository.history(busId).map {
+                if (historyBus == busId) old.copy(history = it, loaded = true) else state.value.value
+            }
+        }
+    }
+    fun clearHistory() { historyBus = null; update(state.value.value.copy(history = emptyList(), loaded = false)) }
     fun submit(journeyId: Long?, message: String, photo: Photo?) = execute { old -> SubmitRequest(repository)(journeyId, message, photo).map { old.copy(receipt = it) } }
-    fun evidence(id: String, supervisor: Boolean) = execute { old -> repository.evidence(id, supervisor).map { old.copy(evidence = it) } }
+    fun evidence(id: String, supervisor: Boolean) = execute { old ->
+        update(old.copy(evidence = null))
+        repository.evidence(id, supervisor).map { old.copy(evidence = it) }
+    }
     fun clearEvidence() { update(state.value.value.copy(evidence = null)) }
     fun clearReceipt() { update(state.value.value.copy(receipt = null)) }
     fun approve(id: Long) = decision { repository.approve(id) }

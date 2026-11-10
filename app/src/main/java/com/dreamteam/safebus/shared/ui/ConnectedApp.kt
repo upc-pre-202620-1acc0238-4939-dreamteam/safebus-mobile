@@ -125,6 +125,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         if (shift == null && journey == null) application.stopService(Intent(application, LocationTrackingService::class.java))
         if (journey == null && tab == Destination.HISTORY) tab = Destination.JOURNEY
     }
+    LaunchedEffect(journey?.id) { account.historyModel.clearHistory() }
     fun refresh() {
         when (tab) {
             Destination.SHIFT -> account.tripModel.refresh()
