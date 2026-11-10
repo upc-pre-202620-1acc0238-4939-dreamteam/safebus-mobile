@@ -7,6 +7,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TrackingEngineTest {
+    @Test fun cadenceAccountsForNetworkTimeAndKeepsPassengerComparisonsBelowThirtySeconds() {
+        assertEquals(29_000L, trackingDelayMillis(true, 1000))
+        assertEquals(14_000L, trackingDelayMillis(false, 1000))
+        assertEquals(1L, trackingDelayMillis(false, 31_000))
+    }
     @Test fun sendsOnlyFreshDriverSamplesAndStopsAfterClosure() = runBlocking {
         var sent = 0
         var fail = true

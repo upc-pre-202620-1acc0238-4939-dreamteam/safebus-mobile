@@ -11,9 +11,12 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.SafeBusApplication
 import com.dreamteam.safebus.AccountScope
+import com.dreamteam.safebus.iam.domain.Role
+import com.dreamteam.safebus.shared.domain.trackingDelayMillis
 import com.dreamteam.safebus.trip.domain.Position
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
@@ -48,11 +51,12 @@ class LocationTrackingService : Service(), LocationListener {
             launch { container.auth.session.collect { if (it?.accessToken != active.session.accessToken) stopSelf() } }
             launch { combine(active.shift, active.journey) { shift, journey -> shift != null || journey != null }.collect { if (!it) stopSelf() } }
             while (isActive && permitted()) {
+                val beganAt = SystemClock.elapsedRealtime()
                 val tracker = active.tracker ?: break
                 tracker.tick(latest, Instant.now())
                 active.updateTracking()
                 active.outbox.flush()
-                delay(30_000)
+                delay(trackingDelayMillis(active.session.role == Role.DRIVER, SystemClock.elapsedRealtime() - beganAt))
             }
             if (!permitted()) active.unavailable()
             stopSelf()

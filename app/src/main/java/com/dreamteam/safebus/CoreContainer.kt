@@ -91,7 +91,11 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
         stopTracking(); mutableJourney.value = value
         if (value != null) tracker = TrackingEngine(vehiclePosition = value.busId?.let { id -> { passenger.location(id) } }, endJourney = { summary ->
             passenger.end(value, EndReason.AUTOMATIC_SEPARATION, summary).also { result ->
-                if (result is DomainResult.Success) { mutableJourney.value = null; passengerModel.synchronize(null) }
+                if (result is DomainResult.Success) {
+                    mutableTracking.value = TrackingState(TrackingStatus.AUTO_ENDED)
+                    mutableJourney.value = null
+                    passengerModel.synchronize(null)
+                }
             }
         })
         updateTracking()

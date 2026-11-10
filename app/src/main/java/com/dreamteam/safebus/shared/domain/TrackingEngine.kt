@@ -10,6 +10,9 @@ import java.time.Instant
 enum class TrackingStatus { STOPPED, WAITING, TRACKING, PENDING, MANUAL_ONLY, FAILED, AUTO_ENDED }
 data class TrackingState(val status: TrackingStatus = TrackingStatus.STOPPED, val failure: Failure? = null, val lastSample: Instant? = null)
 
+fun trackingDelayMillis(driver: Boolean, elapsedMillis: Long): Long =
+    ((if (driver) 30_000L else 15_000L) - elapsedMillis.coerceAtLeast(0)).coerceAtLeast(1)
+
 class TrackingEngine(private val sendPosition: (suspend (Position) -> DomainResult<Delivery>)? = null,
     private val vehiclePosition: (suspend () -> DomainResult<Position>)? = null,
     private val endJourney: (suspend (Separation) -> DomainResult<Delivery>)? = null) {
