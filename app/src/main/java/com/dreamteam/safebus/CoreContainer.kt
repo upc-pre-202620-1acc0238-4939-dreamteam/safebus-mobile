@@ -1,6 +1,8 @@
 package com.dreamteam.safebus
 
 import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.dreamteam.safebus.fleet.data.RemoteFleetRepository
 import com.dreamteam.safebus.fleet.ui.FleetViewModel
 import com.dreamteam.safebus.iam.data.*
@@ -20,6 +22,11 @@ import com.dreamteam.safebus.trip.ui.TripViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+internal inline fun <reified T : ViewModel> ViewModelStore.model(key: String, crossinline create: () -> T): T =
+    ViewModelProvider(this, object : ViewModelProvider.Factory {
+        override fun <V : ViewModel> create(modelClass: Class<V>): V = modelClass.cast(create())!!
+    })[key, T::class.java]
+
 class CoreContainer(val endpoint: String, private val localHttp: Boolean, private val store: SecureStore, private val engine: HttpEngine = UrlConnectionEngine(), private val scheduleSync: () -> Unit = {}) {
     val auth: RemoteAuthRepository
     private val models = ViewModelStore()
@@ -31,7 +38,7 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
     private fun invalidate(token: String) = auth.invalidate(token)
     val authModel by lazy {
         val anonymous = Outbox(store, "anonymous:$endpoint", PendingTransport { invalid("AUTHENTICATION_REQUIRED") })
-        AuthViewModel(auth, { input -> HttpPassengerService(api, anonymous).register(input) }, {
+        models.model("auth") { AuthViewModel(auth, { input -> HttpPassengerService(api, anonymous).register(input) }, {
             val active = account
             active?.stopTracking()
             if (active?.session?.role == Role.PASSENGER) {
@@ -40,7 +47,7 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
                     is DomainResult.Success -> restored.value?.let { journey -> active.passenger.end(journey, EndReason.SIGN_OUT).map { Unit } } ?: DomainResult.Success(Unit)
                 }
             } else DomainResult.Success(Unit)
-        }).also { models.put("auth", it) }
+        }) }
     }
     fun bind(session: Session): AccountScope {
         val previous = account
@@ -72,13 +79,13 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
     @Volatile var tracker: TrackingEngine? = null
         private set
     private val models = ViewModelStore()
-    val tripModel = TripViewModel(trip, ::setShift).also { models.put("trip", it) }
-    val passengerModel = PassengerViewModel(passenger, ::setJourney).also { models.put("passenger", it) }
-    val safetyModel = SafetyViewModel(safety).also { models.put("safety", it) }
-    val historyModel = SafetyViewModel(safety).also { models.put("history", it) }
-    val panicModel = PanicViewModel(safety).also { models.put("panic", it) }
-    val fleetModel = FleetViewModel(fleet).also { models.put("fleet", it) }
-    val syncModel = SyncViewModel(outbox::count, outbox::flush).also { models.put("sync", it) }
+    val tripModel = models.model("trip") { TripViewModel(trip, ::setShift) }
+    val passengerModel = models.model("passenger") { PassengerViewModel(passenger, ::setJourney) }
+    val safetyModel = models.model("safety") { SafetyViewModel(safety) }
+    val historyModel = models.model("history") { SafetyViewModel(safety) }
+    val panicModel = models.model("panic") { PanicViewModel(safety) }
+    val fleetModel = models.model("fleet") { FleetViewModel(fleet) }
+    val syncModel = models.model("sync") { SyncViewModel(outbox::count, outbox::flush) }
 
     fun setShift(value: ActiveShift?) {
         if (mutableShift.value == value) return
