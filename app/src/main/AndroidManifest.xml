@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:name="com.dreamteam.safebus.SafeBusApplication" android:networkSecurityConfig="@xml/network_security_config" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:label="@string/app_name" android:icon="@drawable/ic_safebus" android:supportsRtl="true" android:theme="@style/Theme.SafeBus">
         <service android:name="com.dreamteam.safebus.shared.data.LocationTrackingService" android:exported="false" android:foregroundServiceType="location" />
-        <activity android:name="com.safebus.driver.MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+        <activity android:name="com.dreamteam.safebus.MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

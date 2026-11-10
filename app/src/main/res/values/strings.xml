@@ -257,6 +257,18 @@
     <string name="core_disabled">Deshabilitado</string>
     <string name="core_tracking_channel">Seguimiento del viaje</string>
     <string name="core_tracking_notification">SafeBus está utilizando la ubicación durante tu recorrido.</string>
+    <string name="core_account">Cuenta</string>
+    <string name="core_role_driver">Conductor</string>
+    <string name="core_role_passenger">Pasajero</string>
+    <string name="core_role_supervisor">Supervisor</string>
+    <string name="core_user_id">Cuenta %1$s</string>
+    <string name="core_sign_out">Cerrar sesión</string>
+    <string name="core_sign_out_detail">Se detendrá la ubicación. Si tienes un viaje de pasajero activo, su cierre se enviará o quedará pendiente de sincronización.</string>
+    <string name="core_sync_count">Envíos pendientes: %1$d</string>
+    <string name="core_sync_retry">Reintentar envíos</string>
+    <string name="core_live_connected">Eventos en directo conectados</string>
+    <string name="core_live_reconnecting">Reconectando eventos · puedes actualizar la bandeja</string>
+    <string name="core_history_requires_journey">Inicia un viaje para consultar las alertas de tu bus.</string>
 </resources>
 
 
