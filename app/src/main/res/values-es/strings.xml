@@ -279,6 +279,7 @@
     <string name="core_clock_error">La hora del dispositivo no es compatible con el recorrido. Activa la fecha y hora automáticas y vuelve a intentar.</string>
     <string name="core_restore_shift_missing">El servidor indica que este turno ya está activo, pero este dispositivo no conserva su identificador de sesión. El servidor actual no permite recuperar esa asociación; contacta al responsable de la empresa.</string>
     <string name="core_company_not_verified">Empresa sin validación registrada</string>
+    <string name="core_alert_not_delivered">El servidor rechazó un envío pendiente. No se creó esa alerta; revisa tu turno antes de volver a solicitar ayuda.</string>
 </resources>
 
 

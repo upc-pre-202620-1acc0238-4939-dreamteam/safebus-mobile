@@ -20,8 +20,10 @@ class PendingSyncService : JobService() {
             if (session == null) { jobFinished(params, false); return@launch }
             val account = container.bind(session)
             val result = account.outbox.flush()
+            val remaining = (account.outbox.count() as? DomainResult.Success)?.value ?: 0
             account.syncModel.count()
-            jobFinished(params, shouldRetry(result))
+            val authenticated = container.auth.session.value?.accessToken == session.accessToken
+            jobFinished(params, authenticated && (shouldRetry(result) || remaining > 0))
         }
         return true
     }

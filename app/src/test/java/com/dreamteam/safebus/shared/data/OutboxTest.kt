@@ -12,6 +12,18 @@ class OutboxTest {
     private var answer: DomainResult<Unit> = DomainResult.Error(Failure(FailureKind.NETWORK))
     private val sent = mutableListOf<PendingRequest>()
     private fun box(owner: String = "account-1") = Outbox(store, owner, PendingTransport { sent.add(it); answer }, Dispatchers.Unconfined)
+    @Test fun rejectedRecordDoesNotBlockRemainingValidDeliveries() = runBlocking {
+        var online = false
+        val box = Outbox(store, "owner", PendingTransport {
+            if (!online) DomainResult.Error(Failure(FailureKind.NETWORK))
+            else if (it.id == request.id) DomainResult.Error(Failure.fromStatus(422)) else DomainResult.Success(Unit)
+        }, Dispatchers.Unconfined)
+        box.submit(request); box.submit(request.copy(id = "second"))
+        online = true
+        assertEquals(FailureKind.VALIDATION, (box.flush() as DomainResult.Error).failure.kind)
+        assertEquals(0, (box.count() as DomainResult.Success).value)
+        assertTrue(store.values.isEmpty())
+    }
     @Test fun schedulesBackgroundDeliveryOnlyAfterDurableWrite() = runBlocking {
         var scheduled = 0
         val box = Outbox(store, "owner", PendingTransport { answer }, Dispatchers.Unconfined, { assertTrue(store.values.isNotEmpty()); scheduled++ })

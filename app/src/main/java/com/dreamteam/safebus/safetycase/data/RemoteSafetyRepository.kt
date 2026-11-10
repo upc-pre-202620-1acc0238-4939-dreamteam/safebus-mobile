@@ -48,11 +48,23 @@ class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Out
     }
     override suspend fun driverAlerts(): DomainResult<List<Emergency>> = withContext(dispatcher) {
         val records = try { localAlerts() } catch (_: Exception) { return@withContext DomainResult.Error(Failure(FailureKind.STORAGE)) }
+        val pending = when (val result = outbox.identifiers()) {
+            is DomainResult.Error -> return@withContext result
+            is DomainResult.Success -> result.value
+        }
         val alerts = mutableListOf<Emergency>()
         for ((id, at) in records.reversed()) {
+            if (id in pending) { alerts.add(Emergency(id, "PENDING", "CRITICAL", null, at)); continue }
             when (val result = api.call("GET", "/api/v1/driver-emergencies/$id") { it.json().toEmergency("CRITICAL") }) {
                 is DomainResult.Success -> alerts.add(result.value)
-                is DomainResult.Error -> if (result.failure.kind == FailureKind.NOT_FOUND) alerts.add(Emergency(id, "PENDING", "CRITICAL", null, at)) else return@withContext result
+                is DomainResult.Error -> {
+                    if (result.failure.kind == FailureKind.NOT_FOUND) {
+                        try { saveAlerts(localAlerts().filterNot { it.first == id }) }
+                        catch (_: Exception) { return@withContext DomainResult.Error(Failure(FailureKind.STORAGE)) }
+                        return@withContext invalid("ALERT_NOT_DELIVERED")
+                    }
+                    return@withContext result
+                }
             }
         }
         DomainResult.Success(alerts)

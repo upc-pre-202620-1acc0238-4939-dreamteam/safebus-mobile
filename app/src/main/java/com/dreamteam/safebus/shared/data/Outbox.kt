@@ -46,6 +46,7 @@ class Outbox(private val store: SecureStore, owner: String, private val transpor
         store.write(key, bytes.toByteArray())
     }
     suspend fun count(): DomainResult<Int> = guarded { DomainResult.Success(read().size) }
+    suspend fun identifiers(): DomainResult<Set<String>> = guarded { DomainResult.Success(read().map { it.id }.toSet()) }
     suspend fun submit(request: PendingRequest, preserveExistingEnd: Boolean = false): DomainResult<Delivery> = guarded {
         val items = read()
         val existing = items.find { it.id == request.id }
@@ -58,13 +59,14 @@ class Outbox(private val store: SecureStore, owner: String, private val transpor
         deliver(existing ?: request)
     }
     suspend fun flush(): DomainResult<Int> = guarded {
+        var rejected: DomainResult.Error? = null
         for (request in read()) {
             when (val result = deliver(request)) {
-                is DomainResult.Error -> return@guarded result
+                is DomainResult.Error -> if (result.failure.kind == FailureKind.UNAUTHORIZED) return@guarded result else rejected = result
                 is DomainResult.Success -> if (result.value == Delivery.PENDING) break
             }
         }
-        DomainResult.Success(read().size)
+        rejected ?: DomainResult.Success(read().size)
     }
     private suspend fun deliver(request: PendingRequest): DomainResult<Delivery> {
         return when (val result = transport.send(request)) {

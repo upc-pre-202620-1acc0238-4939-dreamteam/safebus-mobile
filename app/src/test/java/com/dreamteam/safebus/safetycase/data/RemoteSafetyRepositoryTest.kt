@@ -9,6 +9,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RemoteSafetyRepositoryTest {
+    @Test fun rejectedDriverAlertIsNotMisrepresentedAsPendingOrKeptLocally() = runBlocking {
+        val store = MemoryStore()
+        store.write("driver-alerts:owner", "00000000-0000-0000-0000-000000000001|2026-11-10T12:00:00Z".toByteArray())
+        val api = ApiClient("https://example.com", false, { "token" }, {}, HttpEngine { ApiResponse(404, byteArrayOf()) }, Dispatchers.Unconfined, { "" })
+        val outbox = Outbox(store, "owner", PendingTransport { DomainResult.Success(Unit) }, Dispatchers.Unconfined)
+        val repo = RemoteSafetyRepository(api, outbox, store, "owner", dispatcher = Dispatchers.Unconfined)
+        assertEquals("ALERT_NOT_DELIVERED", (repo.driverAlerts() as DomainResult.Error).failure.code)
+        assertTrue(store.values.isEmpty())
+    }
     @Test fun rejectsInvalidActionsBeforeAnyNetworkOrLocalWrite() = runBlocking {
         val store = MemoryStore()
         val api = ApiClient("https://example.com", false, { "token" }, {}, HttpEngine { error("Unexpected network") }, Dispatchers.Unconfined)

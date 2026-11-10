@@ -77,6 +77,7 @@ fun failureText(failure: Failure): Int = when (failure.code) {
     "ACTIVE_JOURNEY_EXISTS" -> R.string.core_existing_journey
     "BUS_NOT_IN_SERVICE" -> R.string.core_bus_not_serving
     "BUS_QR_INVALID" -> R.string.core_bus_qr_invalid
+    "ALERT_NOT_DELIVERED" -> R.string.core_alert_not_delivered
     "INVALID_END_TIME", "INVALID_ACTIVATION_TIME", "INVALID_CAPTURE_TIME" -> R.string.core_clock_error
     "PHOTO_INVALID", "FACE_PHOTO_INVALID", "FACE_PHOTO_TOO_LARGE", "EVIDENCE_PHOTO_INVALID", "EVIDENCE_PHOTO_TOO_LARGE" -> R.string.core_photo_invalid
     "DUPLICATE_CONTRIBUTION" -> R.string.core_duplicate_request
