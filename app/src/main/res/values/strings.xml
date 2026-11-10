@@ -157,6 +157,23 @@
     <string name="core_qr_scan">Abrir lector QR</string>
     <string name="core_qr_hint">Escanea con un lector compatible o pega el contenido del QR proporcionado por la empresa.</string>
     <string name="core_qr_no_scanner">No hay un lector QR compatible instalado. Puedes pegar el contenido del código.</string>
+    <string name="core_login_title">Tu viaje, más seguro</string>
+    <string name="core_login_description">Ingresa con tu DNI o con el acceso entregado por tu empresa.</string>
+    <string name="core_login_id">DNI o código institucional</string>
+    <string name="core_password">Contraseña</string>
+    <string name="core_login">Iniciar sesión</string>
+    <string name="core_register">Crear cuenta de pasajero</string>
+    <string name="core_dni">DNI de 8 dígitos</string>
+    <string name="core_face_photo">Fotografía de tu rostro</string>
+    <string name="core_registration_privacy">El DNI y la foto de rostro identifican tu cuenta. Esta foto no se utiliza como evidencia de incidentes ni implica verificación facial automática.</string>
+    <string name="core_terms">Acepto el uso del DNI y la foto para identificar mi cuenta, y el tratamiento privado de mis solicitudes de seguridad. Condiciones de registro, versión 2026-10.</string>
+    <string name="core_password_rule">Usa una contraseña de al menos 8 caracteres.</string>
+    <string name="core_registered">Tu cuenta fue creada. Inicia sesión con tu DNI.</string>
+    <string name="core_server_settings">Conexión al servidor</string>
+    <string name="core_api_url">Dirección del servidor</string>
+    <string name="core_api_help">Usa la dirección HTTPS de SafeBus. En desarrollo, el emulador puede conectarse a http://10.0.2.2:8080.</string>
+    <string name="core_api_save">Guardar conexión</string>
+    <string name="core_api_invalid">Ingresa una dirección HTTPS válida sin rutas adicionales.</string>
 </resources>
 
 
