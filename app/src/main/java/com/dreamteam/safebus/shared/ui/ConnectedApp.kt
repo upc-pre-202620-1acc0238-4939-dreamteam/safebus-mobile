@@ -19,6 +19,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.dreamteam.safebus.*
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.fleet.ui.*
+import com.dreamteam.safebus.fleet.domain.FleetBus
 import com.dreamteam.safebus.iam.domain.Role
 import com.dreamteam.safebus.iam.ui.AccessScreen
 import com.dreamteam.safebus.passenger.ui.JourneyScreen
@@ -26,6 +27,8 @@ import com.dreamteam.safebus.safetycase.data.LiveEvent
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.LocationTrackingService
 import com.dreamteam.safebus.trip.ui.TripScreen
+import com.dreamteam.safebus.trip.ui.CountingScreen
+import com.dreamteam.safebus.trip.ui.CounterScreen
 import kotlinx.coroutines.delay
 
 enum class Destination(val label: Int, val icon: Int) {
@@ -45,6 +48,8 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
 @Composable fun ConnectedApp(application: SafeBusApplication, lifecycle: Lifecycle) {
     val container by application.container.collectAsState()
     var settings by rememberSaveable { mutableStateOf(false) }
+    var contact by rememberSaveable { mutableStateOf(false) }
+    BackHandler(contact) { contact = false }
     CoreTheme {
         val current = container
         if (current == null || settings) {
@@ -52,7 +57,11 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         } else {
             val auth by current.authModel.state.collectAsState()
             val session = auth.value.session
-            if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, current.authModel::register, { settings = true }) } }
+            if (contact) {
+                val service by current.serviceModel.state.collectAsState()
+                LaunchedEffect(current) { current.serviceModel.restore() }
+                Scaffold { padding -> Box(Modifier.padding(padding)) { ContactScreen(service, current.serviceModel::submit, current.serviceModel::clear, current.serviceModel::health, { contact = false }) } }
+            } else if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, current.authModel::register, { settings = true }, { contact = true }) } }
             else key(session.accessToken) {
                 val account = remember { current.bind(session) }
                 AccountWorkspace(application, account, lifecycle) {
@@ -80,6 +89,8 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
     val tabs = destinations(account.session.role)
     var tab by rememberSaveable { mutableStateOf(tabs.first()) }
     var requestForm by rememberSaveable { mutableStateOf(false) }
+    var selectedBus by remember { mutableStateOf<FleetBus?>(null) }
+    var requestDetail by remember { mutableStateOf<String?>(null) }
     var foreground by remember { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) }
     var connected by remember { mutableStateOf(false) }
     val trip by account.tripModel.state.collectAsState()
@@ -151,7 +162,9 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
             if (!requestForm && tab != Destination.SHIFT) refresh()
         }
     }
-    BackHandler(requestForm || tab != tabs.first()) { if (requestForm) requestForm = false else tab = tabs.first() }
+    BackHandler(requestForm || selectedBus != null || requestDetail != null || tab != tabs.first()) {
+        when { selectedBus != null -> selectedBus = null; requestDetail != null -> { requestDetail = null; account.requestDetailModel.clear() }; requestForm -> requestForm = false; else -> tab = tabs.first() }
+    }
     Scaffold(bottomBar = {
         Column {
             if (account.session.role == Role.DRIVER && shift != null) {
@@ -162,7 +175,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                 }
             }
             NavigationBar { tabs.forEach { destination ->
-                NavigationBarItem(selected = tab == destination, onClick = { tab = destination; requestForm = false; account.safetyModel.clearEvidence() },
+                NavigationBarItem(selected = tab == destination, onClick = { tab = destination; requestForm = false; selectedBus = null; requestDetail = null; account.requestDetailModel.clear(); account.safetyModel.clearEvidence() },
                     enabled = destination != Destination.HISTORY || journey != null, modifier = Modifier.testTag("nav:${destination.name}"),
                     icon = { Icon(painterResource(destination.icon), contentDescription = null) }, label = { Text(stringResource(destination.label), maxLines = 2) })
             } }
@@ -174,10 +187,17 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
             sync.failure?.let { FailureNotice(it) }
             Box(Modifier.weight(1f)) {
                 when {
+                    selectedBus != null -> CountingWorkspace(account, selectedBus!!, foreground) { selectedBus = null }
+                    requestDetail != null -> {
+                        val detail by account.requestDetailModel.state.collectAsState()
+                        val id = requestDetail!!
+                        LaunchedEffect(id) { account.requestDetailModel.load(id) }
+                        RequestDetailScreen(detail, { account.requestDetailModel.load(id) }, { requestDetail = null; account.requestDetailModel.clear() })
+                    }
                     requestForm && journey != null -> RequestFormScreen(safety, { message, photo -> account.safetyModel.submit(journey?.id, message, photo) }, { requestForm = false; tab = Destination.REQUESTS })
                     tab == Destination.SHIFT -> TripScreen(trip, tracking, account.tripModel::refresh, account.tripModel::activate, account.tripModel::close, requestPermission)
                     tab == Destination.JOURNEY -> JourneyScreen(passenger, tracking, account.passengerModel::start, account.passengerModel::end, { account.safetyModel.clearReceipt(); requestForm = true }, requestPermission)
-                    tab == Destination.FLEET -> FleetScreen(fleet, account.fleetModel::refresh)
+                    tab == Destination.FLEET -> FleetScreen(fleet, account.fleetModel::refresh) { selectedBus = it }
                     tab == Destination.ASSIGNMENTS -> ProvisionScreen(fleet, account.fleetModel::save, account.fleetModel::clearReceipt)
                     tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, sync, account.syncModel::retry, signOut)
                     tab == Destination.HISTORY && journey == null -> CorePage(R.string.core_bus_alerts) { Text(stringResource(R.string.core_history_requires_journey)) }
@@ -191,12 +211,29 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                         }
                         SafetyListScreen(if (tab == Destination.HISTORY) history else safety, mode, ::refresh,
                             { account.safetyModel.evidence(it, account.session.role == Role.SUPERVISOR) }, account.safetyModel::clearEvidence,
-                            account.safetyModel::approve, account.safetyModel::decline, account.safetyModel::attend, account.safetyModel::close)
+                            account.safetyModel::approve, account.safetyModel::decline, account.safetyModel::attend, account.safetyModel::close,
+                            if (mode == SafetyTab.REQUESTS) { id -> requestDetail = id } else null)
                     }
                 }
             }
         }
     }
+}
+
+@Composable private fun CountingWorkspace(account: AccountScope, bus: FleetBus, foreground: Boolean, back: () -> Unit) {
+    val model = remember(account, bus.id) { account.countingModel(bus.id) }
+    val state by model.state.collectAsState()
+    var counter by remember(bus.id) { mutableStateOf(false) }
+    LaunchedEffect(model, counter) { if (!counter) model.refresh() }
+    DisposableEffect(model) { onDispose { model.clearCredential() } }
+    BackHandler(counter) { counter = false }
+    if (counter && bus.shiftId != null) {
+        val device = remember(account, bus.id, bus.shiftId) { account.counterModel(bus.id, bus.shiftId) }
+        val deviceState by device.state.collectAsState()
+        LaunchedEffect(device) { device.restore() }
+        CounterScreen(deviceState, foreground, device::send, device::retry, device::heartbeat) { counter = false }
+    } else CountingScreen(state, model::refresh, model::register, model::rotate, model::revoke, model::clearCredential,
+        if (bus.shiftId != null) { { model.clearCredential(); counter = true } } else null, back)
 }
 
 @Composable private fun AccountScreen(role: Role, user: String, sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit) {

@@ -7,6 +7,14 @@ import org.junit.Test
 
 class ConnectedLaunchTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @Test fun publicContactNavigationReturnsToRealLogin() {
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("openContact").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("openContact").performScrollTo().performClick()
+        compose.onNodeWithTag("contactCompany").assertExists()
+        compose.onNodeWithTag("sendContact").assertIsNotEnabled()
+        compose.onNodeWithTag("contactBack").performScrollTo().performClick()
+        compose.onNodeWithTag("coreSignIn").assertExists()
+    }
     @Test fun productionLauncherOpensConnectedAccessWithoutPrototypeControls() {
         compose.waitUntil(10000) { compose.onAllNodesWithTag("coreSignIn").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("coreSignIn").assertIsNotEnabled()

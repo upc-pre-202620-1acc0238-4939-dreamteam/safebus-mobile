@@ -20,7 +20,7 @@ import com.dreamteam.safebus.shared.ui.*
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-@Composable fun FleetScreen(state: ScreenState<FleetState>, refresh: () -> Unit) {
+@Composable fun FleetScreen(state: ScreenState<FleetState>, refresh: () -> Unit, sources: ((FleetBus) -> Unit)? = null) {
     val context = LocalContext.current
     var search by remember { mutableStateOf("") }
     var mapMissing by remember { mutableStateOf(false) }
@@ -33,6 +33,7 @@ import java.time.ZoneId
             if (buses.isEmpty()) Text(stringResource(R.string.core_empty))
             buses.forEach { bus -> CoreCard(bus.plate) {
                 Text(stringResource(R.string.core_bus_reference, bus.id))
+                if (sources != null) CoreButton(R.string.extra_sources, "sources:${bus.id}") { sources(bus) }
                 Text(stringResource(if (bus.enabled) R.string.core_enabled else R.string.core_disabled))
                 bus.route?.let { Text(it) }; bus.driver?.let { Text(stringResource(R.string.core_driver_name, it)) }
                 bus.capacity?.let { Text(stringResource(R.string.core_capacity_value, it)) }

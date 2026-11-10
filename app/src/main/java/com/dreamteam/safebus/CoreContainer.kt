@@ -16,10 +16,13 @@ import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.*
 import com.dreamteam.safebus.shared.domain.*
 import com.dreamteam.safebus.shared.ui.SyncViewModel
+import com.dreamteam.safebus.shared.ui.ServiceViewModel
 import com.dreamteam.safebus.trip.data.*
 import com.dreamteam.safebus.trip.domain.ActiveShift
 import com.dreamteam.safebus.trip.domain.Position
 import com.dreamteam.safebus.trip.ui.TripViewModel
+import com.dreamteam.safebus.trip.ui.CountingViewModel
+import com.dreamteam.safebus.trip.ui.CounterViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -35,6 +38,10 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
         private set
     private val api = ApiClient(endpoint, localHttp, { authToken() }, { invalidate(it) }, engine)
     init { auth = RemoteAuthRepository(HttpAuthService(api), store, endpoint) }
+    val serviceModel by lazy {
+        val service = HttpServiceContact(api)
+        models.model("service") { ServiceViewModel(service, DurableContactRepository(service, store, endpoint)) }
+    }
     private fun authToken() = auth.token()
     private fun invalidate(token: String) = auth.invalidate(token)
     val authModel by lazy {
@@ -88,6 +95,18 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
     val panicModel = models.model("panic") { PanicViewModel(safety) }
     val fleetModel = models.model("fleet") { FleetViewModel(fleet) }
     val syncModel = models.model("sync") { SyncViewModel(outbox::count, outbox::flush) }
+    val requestDetailModel = models.model("request-detail") { RequestDetailViewModel(safety) }
+    private val counting = RemoteCountingRepository(api)
+    private val counterService = HttpCounterService(endpoint, localHttp, { session.role == Role.SUPERVISOR && token() != null }, engine)
+    private val counterStore = store
+    fun countingModel(busId: Long): CountingViewModel {
+        require(session.role == Role.SUPERVISOR && busId > 0)
+        return models.model("counting:$busId") { CountingViewModel(counting, busId) }
+    }
+    fun counterModel(busId: Long, shiftId: Long): CounterViewModel {
+        require(session.role == Role.SUPERVISOR && busId > 0 && shiftId > 0)
+        return models.model("counter:$busId:$shiftId") { CounterViewModel(DurableCounterRepository(counterService, counterStore, owner, busId, shiftId), busId, shiftId) }
+    }
 
     fun setShift(value: ActiveShift?) {
         if (mutableShift.value == value) return

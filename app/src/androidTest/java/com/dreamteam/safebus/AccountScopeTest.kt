@@ -22,6 +22,8 @@ class AccountScopeTest {
             val account = AccountScope(session, "https://example.com", false, store, HttpEngine { error("No implicit requests") }, { "private" }, {})
             account.setJourney(Journey(1, null, "ABC", "Company", "VERIFIED", "R", "A", "B", "Driver", Instant.now()))
             assertNotNull(account.tracker)
+            assertThrows(IllegalArgumentException::class.java) { account.countingModel(1) }
+            assertThrows(IllegalArgumentException::class.java) { account.counterModel(1, 1) }
             account.dispose()
             assertNull(account.tracker)
             assertEquals(TrackingStatus.STOPPED, account.tracking.value.status)

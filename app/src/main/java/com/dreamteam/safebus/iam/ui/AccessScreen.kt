@@ -14,7 +14,7 @@ import com.dreamteam.safebus.shared.domain.Photo
 import com.dreamteam.safebus.shared.ui.*
 
 @Composable fun AccessScreen(state: ScreenState<AuthState>, signIn: (String, String) -> Unit,
-    register: (Registration) -> Unit, connection: () -> Unit) {
+    register: (Registration) -> Unit, connection: () -> Unit, contact: () -> Unit = {}) {
     var registration by rememberSaveable { mutableStateOf(false) }
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -45,6 +45,7 @@ import com.dreamteam.safebus.shared.ui.*
             }
             TextButton({ registration = true; login = ""; password = "" }, enabled = !state.busy, modifier = Modifier.testTag("openRegistration")) { Text(stringResource(R.string.core_register)) }
             TextButton(connection, enabled = !state.busy) { Text(stringResource(R.string.core_server_settings)) }
+            TextButton(contact, enabled = !state.busy, modifier = Modifier.testTag("openContact")) { Text(stringResource(R.string.extra_contact)) }
         }
     }
 }

@@ -68,6 +68,10 @@ import java.time.format.FormatStyle
 }
 
 fun failureText(failure: Failure): Int = when (failure.code) {
+    "ACTIVE_SOURCE_EXISTS", "SOURCE_REVOKED", "SOURCE_NOT_FOUND", "LABEL_TOO_LONG", "OCCUPANCY_SOURCE_NOT_AUTHORIZED", "COUNTING_FIELDS_REQUIRED" -> R.string.extra_source_error
+    "SEQUENCE_GAP", "SEQUENCE_ALREADY_APPLIED", "EVENT_ID_REUSED", "NEGATIVE_COUNT", "OCCUPANCY_NOT_INITIALIZED", "OCCUPANCY_INCONSISTENT", "ALREADY_INITIALIZED" -> R.string.extra_count_error
+    "COUNT_PENDING" -> R.string.extra_counter_pending
+    "CONTACT_PENDING" -> R.string.extra_connection_pending
     "CREDENTIAL_EXPIRED" -> R.string.core_credential_expired
     "CREDENTIAL_DISABLED" -> R.string.core_credential_disabled
     "CREDENTIAL_NOT_OWNED" -> R.string.core_credential_foreign
