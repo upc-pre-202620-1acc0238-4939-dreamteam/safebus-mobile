@@ -347,6 +347,10 @@
     <string name="extra_close_detail">Cerrar detalle</string>
     <string name="extra_connection_pending">La solicitud sigue pendiente. Reintenta antes de crear una nueva.</string>
     <string name="extra_clear_contact">Crear otra solicitud</string>
+    <string name="core_local_network_title">Acceso al servidor local</string>
+    <string name="core_local_network_help">Este servidor está en una red local. Autoriza el acceso para conectar SafeBus. Los servidores de Internet no necesitan este permiso.</string>
+    <string name="core_local_network_allow">Permitir acceso a la red local</string>
+    <string name="core_local_network_denied">El acceso sigue desactivado. Puedes volver a solicitarlo, habilitar Dispositivos cercanos en los ajustes de SafeBus o elegir otro servidor.</string>
 </resources>
 
 

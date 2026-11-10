@@ -37,7 +37,9 @@ class ApplicationConfigurationTest {
     @Test fun declaresModernPackageAndPrivateLocationService() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.dreamteam.safebus", context.packageName)
-        assertTrue(context.applicationInfo.targetSdkVersion >= 34)
+        assertEquals(37, context.applicationInfo.targetSdkVersion)
+        val permissions = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS).requestedPermissions.orEmpty()
+        assertTrue(permissions.contains(android.Manifest.permission.ACCESS_LOCAL_NETWORK))
         assertEquals(PackageManager.PERMISSION_GRANTED, context.checkSelfPermission(android.Manifest.permission.INTERNET))
         val service = context.packageManager.getServiceInfo(ComponentName(context, LocationTrackingService::class.java), 0)
         assertFalse(service.exported)

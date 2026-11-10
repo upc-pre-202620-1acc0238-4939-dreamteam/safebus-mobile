@@ -26,6 +26,7 @@ import com.dreamteam.safebus.passenger.ui.JourneyScreen
 import com.dreamteam.safebus.safetycase.data.LiveEvent
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.LocationTrackingService
+import com.dreamteam.safebus.shared.data.isLocalServer
 import com.dreamteam.safebus.trip.ui.TripScreen
 import com.dreamteam.safebus.trip.ui.CountingScreen
 import com.dreamteam.safebus.trip.ui.CounterScreen
@@ -49,12 +50,29 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
     val container by application.container.collectAsState()
     var settings by rememberSaveable { mutableStateOf(false) }
     var contact by rememberSaveable { mutableStateOf(false) }
+    fun hasLocalAccess() = Build.VERSION.SDK_INT < 37 || application.checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED
+    var localAccess by remember { mutableStateOf(hasLocalAccess()) }
+    var localDenied by rememberSaveable { mutableStateOf(false) }
+    val localPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        localAccess = granted
+        localDenied = !granted
+    }
+    val requestLocalAccess: () -> Unit = {
+        if (Build.VERSION.SDK_INT >= 37) localPermission.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+    }
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) localAccess = hasLocalAccess()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     BackHandler(contact) { contact = false }
     CoreTheme {
         val current = container
         if (current == null || settings) {
-            Scaffold { padding -> Box(Modifier.padding(padding)) { ConnectionScreen(application.endpoint, { if (application.configure(it)) { settings = false; true } else false }, { settings = false }) } }
-        } else {
+            Scaffold { padding -> Box(Modifier.padding(padding)) { ConnectionScreen(application.endpoint, { if (application.configure(it)) { settings = false; true } else false }, { settings = false }, requestLocalAccess.takeIf { !localAccess }) } }
+        } else LocalNetworkAccess(isLocalServer(current.endpoint) && !localAccess, localDenied, requestLocalAccess, { settings = true }) {
             val auth by current.authModel.state.collectAsState()
             val session = auth.value.session
             if (contact) {
@@ -73,7 +91,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
     }
 }
 
-@Composable private fun ConnectionScreen(initial: String, save: (String) -> Boolean, back: () -> Unit) {
+@Composable private fun ConnectionScreen(initial: String, save: (String) -> Boolean, back: () -> Unit, localAccess: (() -> Unit)?) {
     var value by remember { mutableStateOf(initial) }
     var invalid by remember { mutableStateOf(false) }
     CorePage(R.string.core_server_settings) {
@@ -81,6 +99,10 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         CoreField(R.string.core_api_url, value, { value = it }, "apiEndpoint")
         if (invalid) Text(stringResource(R.string.core_api_invalid), color = MaterialTheme.colorScheme.error)
         CoreButton(R.string.core_api_save, "saveEndpoint") { invalid = !save(value) }
+        localAccess?.let { request ->
+            Text(stringResource(R.string.core_local_network_help))
+            CoreButton(R.string.core_local_network_allow, "connectionLocalNetwork", action = request)
+        }
         CoreButton(R.string.core_back, "connectionBack", action = back)
     }
 }
