@@ -174,6 +174,24 @@
     <string name="core_api_help">Usa la dirección HTTPS de SafeBus. En desarrollo, el emulador puede conectarse a http://10.0.2.2:8080.</string>
     <string name="core_api_save">Guardar conexión</string>
     <string name="core_api_invalid">Ingresa una dirección HTTPS válida sin rutas adicionales.</string>
+    <string name="core_shift">Mi turno</string>
+    <string name="core_no_assignment">No tienes un turno asignado en este momento.</string>
+    <string name="core_assignment">Asignación de la empresa</string>
+    <string name="core_route">%1$s → %2$s</string>
+    <string name="core_activate_shift">Validar QR e iniciar turno</string>
+    <string name="core_active_shift">Turno %1$d activo</string>
+    <string name="core_close_shift">Cerrar turno</string>
+    <string name="core_close_shift_detail">Se cerrará el turno y se detendrá el envío de ubicación. Las alertas conservarán su estado.</string>
+    <string name="core_emergency">Emergencia</string>
+    <string name="core_location">Ubicación durante el recorrido</string>
+    <string name="core_enable_location">Permitir ubicación</string>
+    <string name="core_tracking_stopped">Ubicación detenida.</string>
+    <string name="core_tracking_waiting">Esperando una ubicación reciente del dispositivo.</string>
+    <string name="core_tracking_active">Seguimiento activo con datos recientes.</string>
+    <string name="core_tracking_pending">Ubicación guardada, pendiente de envío.</string>
+    <string name="core_tracking_manual">Sin ubicación precisa disponible. El pasajero puede cerrar su viaje manualmente.</string>
+    <string name="core_tracking_failed">El seguimiento necesita atención. Revisa la conexión o los permisos.</string>
+    <string name="core_tracking_ended">Viaje cerrado automáticamente al detectar separación continua del bus.</string>
 </resources>
 
 
