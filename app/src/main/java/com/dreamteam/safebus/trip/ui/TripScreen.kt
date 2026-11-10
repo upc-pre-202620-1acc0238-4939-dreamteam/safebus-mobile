@@ -27,6 +27,8 @@ import com.dreamteam.safebus.shared.ui.*
             CoreCard(stringResource(R.string.core_active_shift, shift.id)) { TimeLabel(shift.startedAt) }
             TrackingPanel(tracking, permission)
             CoreButton(R.string.core_close_shift, "closeShift", !state.busy) { confirmation = true }
+        } else if (state.value.assignment?.status == "ACTIVE") {
+            Text(stringResource(R.string.core_restore_shift_missing), Modifier.testTag("shiftRecoveryUnavailable"))
         } else if (state.value.assignment != null) {
             QrInput(qr, { qr = it }, !state.busy)
             CoreButton(R.string.core_activate_shift, "activateShift", !state.busy && qr.isNotBlank()) { activate(qr); qr = "" }

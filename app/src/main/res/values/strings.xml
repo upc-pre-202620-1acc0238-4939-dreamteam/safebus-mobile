@@ -147,7 +147,6 @@
     <string name="core_status_unknown">Sin información disponible</string>
     <string name="core_status_critical">Crítica · Conductor</string>
     <string name="core_status_high">Alta · Pasajeros</string>
-    <string name="core_at">%1$s</string>
     <string name="core_photo_choose">Seleccionar fotografía</string>
     <string name="core_photo_selected">Fotografía seleccionada</string>
     <string name="core_photo_hint">JPEG o PNG · hasta 5 MB · la foto se envía de forma privada.</string>
@@ -269,6 +268,17 @@
     <string name="core_live_connected">Eventos en directo conectados</string>
     <string name="core_live_reconnecting">Reconectando eventos · puedes actualizar la bandeja</string>
     <string name="core_history_requires_journey">Inicia un viaje para consultar las alertas de tu bus.</string>
+    <string name="core_credential_expired">La credencial QR venció. Solicita una nueva a tu empresa.</string>
+    <string name="core_credential_disabled">La empresa deshabilitó esta credencial QR.</string>
+    <string name="core_credential_foreign">Esta credencial QR pertenece a otro conductor.</string>
+    <string name="core_credential_invalid">La credencial QR no es válida. Verifica el código entregado por tu empresa.</string>
+    <string name="core_assignment_unavailable">La asignación ya se inició o no está disponible para activarse.</string>
+    <string name="core_existing_journey">Ya tienes un viaje activo. Finalízalo antes de iniciar otro.</string>
+    <string name="core_bus_not_serving">Este bus no tiene un turno activo en este momento.</string>
+    <string name="core_bus_qr_invalid">El QR del bus no es válido o el bus está deshabilitado.</string>
+    <string name="core_clock_error">La hora del dispositivo no es compatible con el recorrido. Activa la fecha y hora automáticas y vuelve a intentar.</string>
+    <string name="core_restore_shift_missing">El servidor indica que este turno ya está activo, pero este dispositivo no conserva su identificador de sesión. El servidor actual no permite recuperar esa asociación; contacta al responsable de la empresa.</string>
+    <string name="core_company_not_verified">Empresa sin validación registrada</string>
 </resources>
 
 

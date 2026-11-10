@@ -12,6 +12,12 @@ import org.junit.Test
 
 class TripScreenTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun missingActiveAssociationDoesNotOfferASecondActivation() {
+        val assignment = Assignment(1, "ACTIVE", "ABC", "R", "A", "B", Instant.EPOCH, Instant.EPOCH.plusSeconds(60))
+        compose.setContent { CoreTheme { TripScreen(ScreenState(TripState(assignment = assignment)), TrackingState(), {}, {}, {}, {}) } }
+        compose.onNodeWithTag("shiftRecoveryUnavailable").assertExists()
+        compose.onNodeWithTag("activateShift").assertDoesNotExist()
+    }
     @Test fun confirmedClosureRequiresExplicitInteraction() {
         var closed = 0
         compose.setContent { CoreTheme { TripScreen(ScreenState(TripState(shift = ActiveShift(1, 1, 1, Instant.EPOCH))), TrackingState(), {}, {}, { closed++ }, {}) } }
