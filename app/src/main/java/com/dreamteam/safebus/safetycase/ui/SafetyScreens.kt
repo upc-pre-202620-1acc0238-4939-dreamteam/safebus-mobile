@@ -35,7 +35,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
 
 @Composable fun SafetyListScreen(state: ScreenState<SafetyState>, tab: SafetyTab, refresh: () -> Unit,
     evidence: (String) -> Unit, clearEvidence: () -> Unit, approve: (Long) -> Unit = {}, decline: (Long, String, String) -> Unit = { _, _, _ -> },
-    attend: (String) -> Unit = {}, close: (String, String, String) -> Unit = { _, _, _ -> }) {
+    attend: (String) -> Unit = {}, close: (String, String, String) -> Unit = { _, _, _ -> }, detail: ((String) -> Unit)? = null) {
     var decision by remember(tab) { mutableStateOf<Decision?>(null) }
     val title = when (tab) {
         SafetyTab.DRIVER_ALERTS -> R.string.core_my_alerts
@@ -71,6 +71,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                     request.contributorCount?.let { Text(stringResource(R.string.core_contributors, it)) }
                     request.decision?.let { StateLabel(it) }; request.decidedAt?.let { TimeLabel(it) }; request.response?.let { Text(it) }
                     if (request.status == "PENDING") DeliveryNotice(Delivery.PENDING)
+                    if (detail != null) CoreButton(R.string.extra_request_detail, "requestDetail:${request.id}", !state.busy && request.status != "PENDING") { detail(request.id) }
                     CoreButton(R.string.core_view_photo, "evidence:${request.id}", !state.busy && request.status != "PENDING") { evidence(request.id) }
                 } }
             }
