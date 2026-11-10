@@ -153,6 +153,12 @@ class BackendIntegrationTest {
         passengers[0].offline = false
         assertEquals(0, value(passengers[0].outbox.flush()))
         assertEquals(2, value(passengers[0].safety.mine()).size)
+        assertEquals(requests[0].id, value(passengers[0].safety.detail(requests[0].id)).id)
+        assertEquals(FailureKind.FORBIDDEN, (passengers[1].safety.detail(requests[0].id) as DomainResult.Error).failure.kind)
+        assertEquals(2, value(passengers[1].safety.mine()).size)
+        val reserved = passengers[0].api.call("GET", "/api/v1/passenger-requests/mine/photo") { Unit }
+        assertEquals(FailureKind.FORBIDDEN, (reserved as DomainResult.Error).failure.kind)
+        assertEquals(2, value(passengers[0].safety.mine()).size)
         assertEquals(FailureKind.FORBIDDEN, (passengers[0].safety.history(bus.id) as DomainResult.Error).failure.kind)
         assertNull(value(passengers[0].passenger.restore()))
         value(conductor.trip.close(shift))
