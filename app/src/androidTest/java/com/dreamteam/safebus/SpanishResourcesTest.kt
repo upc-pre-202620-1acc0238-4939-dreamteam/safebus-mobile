@@ -12,7 +12,7 @@ class SpanishResourcesTest {
         for (language in listOf("en-US", "es-PE")) {
             val configuration = Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag(language)) }
             val resources = context.createConfigurationContext(configuration).resources
-            for (count in listOf(0, 1, 2, 40)) {
+            for (count in listOf(0, 1, 2, 40, 1_000_000)) {
                 val passenger = if (count == 1) "pasajero" else "pasajeros"
                 assertEquals("Capacidad: $count $passenger", resources.getQuantityString(R.plurals.core_capacity_value, count, count))
                 assertEquals("Ocupación: $count $passenger", resources.getQuantityString(R.plurals.core_count_value, count, count))

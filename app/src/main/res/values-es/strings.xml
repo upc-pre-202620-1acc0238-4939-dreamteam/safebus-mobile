@@ -227,18 +227,22 @@
     <string name="core_search_bus">Buscar por placa</string>
     <plurals name="core_capacity_value">
         <item quantity="one">Capacidad: %1$d pasajero</item>
+        <item quantity="many">Capacidad: %1$d pasajeros</item>
         <item quantity="other">Capacidad: %1$d pasajeros</item>
     </plurals>
     <plurals name="core_count_value">
         <item quantity="one">Ocupación: %1$d pasajero</item>
+        <item quantity="many">Ocupación: %1$d pasajeros</item>
         <item quantity="other">Ocupación: %1$d pasajeros</item>
     </plurals>
     <plurals name="core_emergency_count">
         <item quantity="one">%1$d emergencia</item>
+        <item quantity="many">%1$d emergencias</item>
         <item quantity="other">%1$d emergencias</item>
     </plurals>
     <plurals name="core_pending_reviews">
         <item quantity="one">%1$d revisión pendiente</item>
+        <item quantity="many">%1$d revisiones pendientes</item>
         <item quantity="other">%1$d revisiones pendientes</item>
     </plurals>
     <string name="core_open_cases">%1$s · %2$s</string>
