@@ -7,7 +7,7 @@ sealed interface DomainResult<out T> {
 
 enum class FailureKind { NETWORK, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, VALIDATION, RATE_LIMITED, SERVER, INVALID_RESPONSE, STORAGE }
 
-data class Failure(val kind: FailureKind, val code: String = "", val status: Int? = null) {
+data class Failure(val kind: FailureKind, val code: String = "", val status: Int? = null, val expectedSequence: Long? = null) {
     val retryable: Boolean get() = kind in setOf(FailureKind.NETWORK, FailureKind.SERVER, FailureKind.RATE_LIMITED)
 
     companion object {
