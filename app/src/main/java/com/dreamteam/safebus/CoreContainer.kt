@@ -13,6 +13,7 @@ import com.dreamteam.safebus.safetycase.data.*
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.*
 import com.dreamteam.safebus.shared.domain.*
+import com.dreamteam.safebus.shared.ui.SyncViewModel
 import com.dreamteam.safebus.trip.data.*
 import com.dreamteam.safebus.trip.domain.ActiveShift
 import com.dreamteam.safebus.trip.ui.TripViewModel
@@ -77,6 +78,7 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
     val historyModel = SafetyViewModel(safety).also { models.put("history", it) }
     val panicModel = PanicViewModel(safety).also { models.put("panic", it) }
     val fleetModel = FleetViewModel(fleet).also { models.put("fleet", it) }
+    val syncModel = SyncViewModel(outbox::count, outbox::flush).also { models.put("sync", it) }
 
     fun setShift(value: ActiveShift?) {
         if (mutableShift.value == value) return
