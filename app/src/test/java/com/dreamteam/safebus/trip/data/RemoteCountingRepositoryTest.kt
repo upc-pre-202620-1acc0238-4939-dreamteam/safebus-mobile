@@ -14,7 +14,7 @@ class RemoteCountingRepositoryTest {
             calls++; ApiResponse(403, byteArrayOf())
         }, Dispatchers.Unconfined, { "BUS_ACCESS_DENIED" }))
         assertTrue(repo.register(0, "label") is DomainResult.Error)
-        assertTrue(repo.register(1, "x".repeat(101)) is DomainResult.Error)
+        assertTrue(repo.register(1, "x".repeat(61)) is DomainResult.Error)
         assertTrue(repo.rotate(1, 0) is DomainResult.Error)
         assertTrue(repo.revoke(0, 1) is DomainResult.Error)
         assertEquals(0, calls)

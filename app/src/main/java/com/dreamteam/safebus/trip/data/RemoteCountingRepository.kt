@@ -20,7 +20,7 @@ class RemoteCountingRepository(private val api: ApiClient) : CountingRepository 
             (0 until array.length()).map { index -> array.getJSONObject(index).toCountingSource().also { source -> require(source.busId == busId) } }
         }
     override suspend fun register(busId: Long, label: String): DomainResult<SourceCredential> =
-        if (busId <= 0 || label.trim().length > 100) invalid("COUNTING_FIELDS_REQUIRED") else
+        if (busId <= 0 || label.trim().length > 60) invalid("COUNTING_FIELDS_REQUIRED") else
             api.call("POST", "/api/v1/buses/$busId/counting-sources", jsonBody("label" to label.trim()), "application/json") {
                 it.json().let { dto -> SourceCredential(dto.toCountingSource().also { source -> require(source.busId == busId) }, dto.getString("key")) }
             }
