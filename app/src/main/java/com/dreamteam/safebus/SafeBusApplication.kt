@@ -2,6 +2,7 @@ package com.dreamteam.safebus
 
 import android.app.Application
 import android.content.Intent
+import androidx.core.content.edit
 import com.dreamteam.safebus.shared.data.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -18,7 +19,7 @@ class SafeBusApplication : Application() {
     fun configure(value: String): Boolean {
         val endpoint = value.trim().trimEnd('/')
         if (!ApiClient.validBaseUrl(endpoint, BuildConfig.DEBUG)) return false
-        preferences.edit().putString("endpoint", endpoint).apply()
+        preferences.edit { putString("endpoint", endpoint) }
         connect(endpoint)
         return true
     }
