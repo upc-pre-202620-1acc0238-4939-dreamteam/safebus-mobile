@@ -2,7 +2,7 @@ package com.dreamteam.safebus.fleet.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
@@ -56,7 +56,7 @@ import java.time.ZoneId
                     TimeLabel(position.capturedAt)
                     Text(stringResource(R.string.core_coordinates, position.latitude, position.longitude))
                     CoreButton(R.string.core_open_map, "map:${bus.id}") {
-                        try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${position.latitude},${position.longitude}?q=${position.latitude},${position.longitude}"))) }
+                        try { context.startActivity(Intent(Intent.ACTION_VIEW, "geo:${position.latitude},${position.longitude}?q=${position.latitude},${position.longitude}".toUri())) }
                         catch (_: ActivityNotFoundException) { mapMissing = true }
                     }
                 }
