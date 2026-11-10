@@ -223,17 +223,18 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
 @Composable private fun CountingWorkspace(account: AccountScope, bus: FleetBus, foreground: Boolean, back: () -> Unit) {
     val model = remember(account, bus.id) { account.countingModel(bus.id) }
     val state by model.state.collectAsState()
+    val sourceId = state.value.sources.firstOrNull { it.status == "ACTIVE" }?.id
     var counter by remember(bus.id) { mutableStateOf(false) }
     LaunchedEffect(model, counter) { if (!counter) model.refresh() }
     DisposableEffect(model) { onDispose { model.clearCredential() } }
     BackHandler(counter) { counter = false }
-    if (counter && bus.shiftId != null) {
-        val device = remember(account, bus.id, bus.shiftId) { account.counterModel(bus.id, bus.shiftId) }
+    if (counter && bus.shiftId != null && sourceId != null) {
+        val device = remember(account, bus.id, bus.shiftId, sourceId) { account.counterModel(bus.id, bus.shiftId, sourceId) }
         val deviceState by device.state.collectAsState()
         LaunchedEffect(device) { device.restore() }
         CounterScreen(deviceState, foreground, device::send, device::retry, device::heartbeat) { counter = false }
     } else CountingScreen(state, model::refresh, model::register, model::rotate, model::revoke, model::clearCredential,
-        if (bus.shiftId != null) { { model.clearCredential(); counter = true } } else null, back)
+        if (bus.shiftId != null && sourceId != null) { { model.clearCredential(); counter = true } } else null, back)
 }
 
 @Composable private fun AccountScreen(role: Role, user: String, sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit) {

@@ -103,9 +103,9 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
         require(session.role == Role.SUPERVISOR && busId > 0)
         return models.model("counting:$busId") { CountingViewModel(counting, busId) }
     }
-    fun counterModel(busId: Long, shiftId: Long): CounterViewModel {
-        require(session.role == Role.SUPERVISOR && busId > 0 && shiftId > 0)
-        return models.model("counter:$busId:$shiftId") { CounterViewModel(DurableCounterRepository(counterService, counterStore, owner, busId, shiftId), busId, shiftId) }
+    fun counterModel(busId: Long, shiftId: Long, sourceId: Long): CounterViewModel {
+        require(session.role == Role.SUPERVISOR && busId > 0 && shiftId > 0 && sourceId > 0)
+        return models.model("counter:$busId:$shiftId:$sourceId") { CounterViewModel(DurableCounterRepository(counterService, counterStore, "$owner:source:$sourceId", busId, shiftId), busId, shiftId) }
     }
 
     fun setShift(value: ActiveShift?) {

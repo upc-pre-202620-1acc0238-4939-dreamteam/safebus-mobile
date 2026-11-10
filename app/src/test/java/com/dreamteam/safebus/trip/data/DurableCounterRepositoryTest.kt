@@ -31,6 +31,7 @@ class DurableCounterRepositoryTest {
         assertTrue(repo().submit(command, "private-key") is DomainResult.Error)
         assertEquals(command, state().pending); assertNull(state().receipt)
         assertNull((repo("other").restore() as DomainResult.Success).value.pending)
+        assertNull((repo("one:replacement-source").restore() as DomainResult.Success).value.pending)
         assertFalse(records.values.any { it.toString(Charsets.UTF_8).contains("private-key") })
         failure = null
         assertTrue(repo().retry("private-key") is DomainResult.Success)
