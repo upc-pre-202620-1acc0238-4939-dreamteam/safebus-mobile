@@ -76,7 +76,7 @@ fun AlertsScreen(current: EmergencyState?, emptyHistory: Boolean, onCurrent: () 
             Text(stringResource(R.string.current_alert), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.unit_route), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.registered_at), style = MaterialTheme.typography.bodyMedium)
-            EmergencyStatus(current!!)
+            EmergencyStatus(current)
             SecondaryAction(stringResource(R.string.view_details), onCurrent, Modifier.testTag("currentAlertDetails"))
         }
         if (showHistory) InfoCard {

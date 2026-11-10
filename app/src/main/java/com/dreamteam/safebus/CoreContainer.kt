@@ -72,7 +72,7 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
     token: () -> String?, unauthorized: (String) -> Unit, scheduleSync: () -> Unit = {}) {
     private val owner = "$endpoint:${session.role}:${session.companyId}:${session.userId}"
     val api = ApiClient(endpoint, localHttp, token, unauthorized, engine)
-    val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) { Unit } }, onPending = scheduleSync)
+    val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) {} }, onPending = scheduleSync)
     val trip = RemoteTripRepository(HttpTripService(api, outbox), store, owner)
     val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, owner)
     @Volatile private var latestDriverPosition: Position? = null

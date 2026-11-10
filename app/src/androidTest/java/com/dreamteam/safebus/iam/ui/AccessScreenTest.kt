@@ -1,7 +1,7 @@
 package com.dreamteam.safebus.iam.ui
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.dreamteam.safebus.shared.ui.*
 import com.dreamteam.safebus.shared.domain.*
 import org.junit.Assert.*

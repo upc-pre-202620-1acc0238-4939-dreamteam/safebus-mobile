@@ -1,9 +1,9 @@
 [versions]
-agp = "9.4.0"
-kotlin = "2.2.10"
-composeBom = "2026.02.01"
+agp = "9.5.1"
+kotlin = "2.4.21"
+composeBom = "2026.09.00"
 activity = "1.13.0"
-core = "1.19.0"
+core = "1.19.1"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }

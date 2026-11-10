@@ -41,4 +41,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.junit)
     testImplementation(libs.androidx.test.junit)
+    constraints {
+        androidTestImplementation("androidx.test.espresso:espresso-core:3.8.0-alpha03") {
+            because("Android 17 removes the InputManager.getInstance API used by Espresso 3.7")
+        }
+    }
 }

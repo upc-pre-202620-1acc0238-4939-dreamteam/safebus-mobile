@@ -29,7 +29,7 @@ class HttpAuthService(private val api: ApiClient, private val clock: Clock = Clo
         val claims = JSONObject(Base64.getUrlDecoder().decode(parts[1]).toString(Charsets.UTF_8))
         dto.toDomain(claims.getString("sub"), claims.getString("role"), claims.optionalLong("companyId"), Instant.ofEpochSecond(claims.getLong("exp")), clock.instant())
     }
-    override suspend fun signOut(): DomainResult<Unit> = api.call("POST", "/api/v1/auth/sign-out") { Unit }
+    override suspend fun signOut(): DomainResult<Unit> = api.call("POST", "/api/v1/auth/sign-out") {}
 }
 
 class RemoteAuthRepository(private val service: AuthService, private val store: SecureStore, private val endpoint: String,

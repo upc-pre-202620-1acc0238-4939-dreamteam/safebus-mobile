@@ -116,14 +116,14 @@ class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Out
                 group.getLong("busId"), group.getInt("contributorCount"), group.objects("requests").map { request -> request.toPassengerRequest(true) }) },
             Instant.parse(dto.getString("generatedAt")))
     }
-    override suspend fun approve(groupId: Long): DomainResult<Unit> = if (groupId <= 0) invalid("INVALID_GROUP") else api.call("POST", "/api/v1/request-groups/$groupId/approve") { Unit }
+    override suspend fun approve(groupId: Long): DomainResult<Unit> = if (groupId <= 0) invalid("INVALID_GROUP") else api.call("POST", "/api/v1/request-groups/$groupId/approve") {}
     override suspend fun decline(groupId: Long, reason: String, response: String): DomainResult<Unit> =
         if (groupId <= 0 || !validDecision(reason, response)) invalid("DECISION_REQUIRED")
-        else api.call("POST", "/api/v1/request-groups/$groupId/decline", jsonBody("reason" to reason.trim(), "response" to response.trim().ifEmpty { null }), "application/json") { Unit }
-    override suspend fun attend(id: String): DomainResult<Unit> = if (!validId(id)) invalid("INVALID_EMERGENCY") else api.call("POST", "/api/v1/emergencies/$id/start-attention") { Unit }
+        else api.call("POST", "/api/v1/request-groups/$groupId/decline", jsonBody("reason" to reason.trim(), "response" to response.trim().ifEmpty { null }), "application/json") {}
+    override suspend fun attend(id: String): DomainResult<Unit> = if (!validId(id)) invalid("INVALID_EMERGENCY") else api.call("POST", "/api/v1/emergencies/$id/start-attention") {}
     override suspend fun close(id: String, outcome: String, response: String): DomainResult<Unit> =
         if (!validId(id) || !validDecision(outcome, response)) invalid("DECISION_REQUIRED")
-        else api.call("POST", "/api/v1/emergencies/$id/close", jsonBody("outcome" to outcome.trim(), "response" to response.trim().ifEmpty { null }), "application/json") { Unit }
+        else api.call("POST", "/api/v1/emergencies/$id/close", jsonBody("outcome" to outcome.trim(), "response" to response.trim().ifEmpty { null }), "application/json") {}
 
     companion object {
         fun validDecision(reason: String, response: String) = reason.trim().length in 1..500 && response.trim().length <= 500

@@ -39,7 +39,7 @@ class BackendIntegrationTest {
         init { auth = RemoteAuthRepository(HttpAuthService(api), store, endpoint) }
         private fun authToken() = auth.token()
         private fun invalidate(token: String) = auth.invalidate(token)
-        val outbox = Outbox(store, UUID.randomUUID().toString(), PendingTransport { api.call("POST", it.path, it.body, it.contentType) { Unit } })
+        val outbox = Outbox(store, UUID.randomUUID().toString(), PendingTransport { api.call("POST", it.path, it.body, it.contentType) {} })
         val fleet = RemoteFleetRepository(api)
         val trip = RemoteTripRepository(HttpTripService(api, outbox), store, "test")
         val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, "test")
@@ -156,7 +156,7 @@ class BackendIntegrationTest {
         assertEquals(requests[0].id, value(passengers[0].safety.detail(requests[0].id)).id)
         assertEquals(FailureKind.FORBIDDEN, (passengers[1].safety.detail(requests[0].id) as DomainResult.Error).failure.kind)
         assertEquals(2, value(passengers[1].safety.mine()).size)
-        val reserved = passengers[0].api.call("GET", "/api/v1/passenger-requests/mine/photo") { Unit }
+        val reserved = passengers[0].api.call("GET", "/api/v1/passenger-requests/mine/photo") {}
         assertEquals(FailureKind.FORBIDDEN, (reserved as DomainResult.Error).failure.kind)
         assertEquals(2, value(passengers[0].safety.mine()).size)
         assertEquals(FailureKind.FORBIDDEN, (passengers[0].safety.history(bus.id) as DomainResult.Error).failure.kind)
