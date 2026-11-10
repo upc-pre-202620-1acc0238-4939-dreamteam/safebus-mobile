@@ -223,6 +223,38 @@
     <string name="core_decision_saved">El servidor confirmó la operación.</string>
     <string name="core_approve_detail">Se activará una emergencia de pasajeros con prioridad alta para esta agrupación.</string>
     <string name="core_attend_detail">Tu cuenta quedará registrada como responsable de la atención.</string>
+    <string name="core_fleet">Flota</string>
+    <string name="core_assignments">Gestión</string>
+    <string name="core_search_bus">Buscar por placa</string>
+    <string name="core_capacity_value">Capacidad: %1$d pasajeros</string>
+    <string name="core_count_value">Ocupación: %1$d pasajeros</string>
+    <string name="core_open_cases">%1$d emergencias · %2$d revisiones pendientes</string>
+    <string name="core_open_map">Abrir ubicación en mapas</string>
+    <string name="core_map_unavailable">No hay una aplicación de mapas disponible. Puedes seguir consultando la lista.</string>
+    <string name="core_over_capacity">El conteo supera la capacidad registrada.</string>
+    <string name="core_create_bus">Registrar bus</string>
+    <string name="core_create_driver">Registrar conductor</string>
+    <string name="core_create_route">Registrar ruta</string>
+    <string name="core_create_assignment">Asignar turno</string>
+    <string name="core_update_capacity">Registrar capacidad</string>
+    <string name="core_plate">Placa</string>
+    <string name="core_name">Nombre</string>
+    <string name="core_origin">Origen</string>
+    <string name="core_destination">Destino</string>
+    <string name="core_driver_id">Identificador del conductor</string>
+    <string name="core_bus_id">Identificador del bus</string>
+    <string name="core_route_id">Identificador de la ruta</string>
+    <string name="core_start_time">Inicio (AAAA-MM-DDTHH:mm)</string>
+    <string name="core_end_time">Fin (AAAA-MM-DDTHH:mm)</string>
+    <string name="core_time_zone">Zona horaria: %1$s</string>
+    <string name="core_capacity">Capacidad de pasajeros</string>
+    <string name="core_technical_record">Referencia del registro técnico</string>
+    <string name="core_save">Guardar en el servidor</string>
+    <string name="core_saved_id">Registro confirmado. Identificador: %1$d</string>
+    <string name="core_credential">Credencial QR generada</string>
+    <string name="core_catalog_note">Usa los identificadores confirmados por la empresa. El servidor actual permite registrar recursos, pero no consultar los catálogos completos de conductores y rutas.</string>
+    <string name="core_enabled">Habilitado</string>
+    <string name="core_disabled">Deshabilitado</string>
 </resources>
 
 
