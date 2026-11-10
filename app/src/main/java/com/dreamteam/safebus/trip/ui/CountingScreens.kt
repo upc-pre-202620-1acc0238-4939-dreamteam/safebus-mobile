@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.shared.ui.*
@@ -20,8 +21,8 @@ import kotlinx.coroutines.delay
         CoreButton(R.string.core_back, "sourcesBack", action = back)
         state.value.occupancy?.let { occupancy -> CoreCard(stringResource(R.string.extra_occupancy)) {
             StateLabel(occupancy.status)
-            occupancy.count?.let { Text(stringResource(R.string.core_count_value, it)) }
-            occupancy.capacity?.let { Text(stringResource(R.string.core_capacity_value, it)) }
+            occupancy.count?.let { Text(pluralStringResource(R.plurals.core_count_value, it, it)) }
+            occupancy.capacity?.let { Text(pluralStringResource(R.plurals.core_capacity_value, it, it)) }
             occupancy.lastCountAt?.let { Text(stringResource(R.string.core_count_time)); TimeLabel(it) }
             occupancy.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
             TimeLabel(occupancy.generatedAt)
@@ -77,7 +78,7 @@ import kotlinx.coroutines.delay
         CoreField(R.string.extra_device_key, key, { key = it }, "counterKey", password = true, enabled = !state.busy)
         state.failure?.expectedSequence?.let { Text(stringResource(R.string.extra_expected_sequence, it)) }
         state.value.counter.receipt?.let { receipt ->
-            Text(stringResource(R.string.core_count_value, receipt.count))
+            Text(pluralStringResource(R.plurals.core_count_value, receipt.count, receipt.count))
             Text(stringResource(R.string.extra_next_sequence, receipt.nextSequence))
         }
         if (pending != null) {

@@ -1,5 +1,6 @@
 package com.dreamteam.safebus.fleet.ui
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.dreamteam.safebus.shared.ui.*
@@ -11,6 +12,17 @@ import org.junit.Test
 
 class FleetScreensTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun fleetUsesIndependentPluralsForPassengersEmergenciesAndReviews() {
+        val bus = mutableStateOf(FleetBus(1, "ABC-123", true, 1, null, null, null, "UNAVAILABLE", null, "AVAILABLE", null, 1, null, 1, 2))
+        compose.setContent { CoreTheme { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus.value), Instant.EPOCH))), {}) } }
+        compose.onNodeWithText("Capacidad: 1 pasajero").assertExists()
+        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
+        compose.onNodeWithText("1 emergencia · 2 revisiones pendientes").assertExists()
+        compose.runOnIdle { bus.value = bus.value.copy(capacity = 40, count = 0, emergencyCount = 2, pendingGroups = 1) }
+        compose.onNodeWithText("Capacidad: 40 pasajeros").assertExists()
+        compose.onNodeWithText("Ocupación: 0 pasajeros").assertExists()
+        compose.onNodeWithText("2 emergencias · 1 revisión pendiente").assertExists()
+    }
     @Test fun invalidAssignmentShowsFeedbackAndDoesNotSubmit() {
         var writes = 0
         compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { writes++ }, {}) } }

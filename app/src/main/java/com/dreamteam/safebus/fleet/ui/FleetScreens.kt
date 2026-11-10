@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.fleet.domain.*
@@ -36,13 +37,15 @@ import java.time.ZoneId
                 if (sources != null) CoreButton(R.string.extra_sources, "sources:${bus.id}") { sources(bus) }
                 Text(stringResource(if (bus.enabled) R.string.core_enabled else R.string.core_disabled))
                 bus.route?.let { Text(it) }; bus.driver?.let { Text(stringResource(R.string.core_driver_name, it)) }
-                bus.capacity?.let { Text(stringResource(R.string.core_capacity_value, it)) }
+                bus.capacity?.let { Text(pluralStringResource(R.plurals.core_capacity_value, it, it)) }
                 StateLabel(bus.occupancyStatus)
-                bus.count?.let { Text(stringResource(R.string.core_count_value, it)) }
+                bus.count?.let { Text(pluralStringResource(R.plurals.core_count_value, it, it)) }
                 bus.lastCountAt?.let { Text(stringResource(R.string.core_count_time)); TimeLabel(it) }
                 bus.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
                 if (bus.load == "OVER_CAPACITY") Text(stringResource(R.string.core_over_capacity), color = MaterialTheme.colorScheme.error)
-                Text(stringResource(R.string.core_open_cases, bus.emergencyCount, bus.pendingGroups))
+                Text(stringResource(R.string.core_open_cases,
+                    pluralStringResource(R.plurals.core_emergency_count, bus.emergencyCount, bus.emergencyCount),
+                    pluralStringResource(R.plurals.core_pending_reviews, bus.pendingGroups, bus.pendingGroups)))
                 bus.groups.forEach { group ->
                     StateLabel(group.status)
                     Text(stringResource(R.string.core_contributors, group.contributors))

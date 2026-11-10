@@ -1,5 +1,6 @@
 package com.dreamteam.safebus.trip.ui
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.dreamteam.safebus.shared.domain.*
@@ -12,6 +13,22 @@ import java.time.Instant
 
 class CountingScreensTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun occupancyUsesPassengerSingularAndPlural() {
+        val occupancy = mutableStateOf(Occupancy(1, "AVAILABLE", null, 1, 1, null, null, null, Instant.EPOCH))
+        compose.setContent { CoreTheme { CountingScreen(ScreenState(CountingState(occupancy = occupancy.value)), {}, {}, {}, {}, {}, null, {}) } }
+        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
+        compose.onNodeWithText("Capacidad: 1 pasajero").assertExists()
+        compose.runOnIdle { occupancy.value = occupancy.value.copy(count = 0, capacity = 40) }
+        compose.onNodeWithText("Ocupación: 0 pasajeros").assertExists()
+        compose.onNodeWithText("Capacidad: 40 pasajeros").assertExists()
+    }
+    @Test fun confirmedCountUsesPassengerSingularAndPlural() {
+        val receipt = mutableStateOf(CountReceipt(1, 2, Instant.EPOCH))
+        compose.setContent { CoreTheme { CounterScreen(ScreenState(CounterUiState(CounterState(receipt = receipt.value))), false, { _, _, _, _ -> }, {}, {}, {}) } }
+        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
+        compose.runOnIdle { receipt.value = CountReceipt(2, 3, Instant.EPOCH) }
+        compose.onNodeWithText("Ocupación: 2 pasajeros").assertExists()
+    }
     @Test fun revocationRequiresConfirmationAndRejectionDoesNotChangeSource() {
         var calls = 0
         val state = ScreenState(CountingState(sources = listOf(CountingSource(1, 2, null, "ACTIVE", Instant.EPOCH, null, null)), loaded = true), failure = Failure.fromStatus(403))
