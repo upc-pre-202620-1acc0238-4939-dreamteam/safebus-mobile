@@ -20,7 +20,7 @@ import com.dreamteam.safebus.trip.ui.TripViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CoreContainer(val endpoint: String, private val localHttp: Boolean, private val store: SecureStore, private val engine: HttpEngine = UrlConnectionEngine()) {
+class CoreContainer(val endpoint: String, private val localHttp: Boolean, private val store: SecureStore, private val engine: HttpEngine = UrlConnectionEngine(), private val scheduleSync: () -> Unit = {}) {
     val auth: RemoteAuthRepository
     private val models = ViewModelStore()
     @Volatile var account: AccountScope? = null
@@ -47,17 +47,17 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
         if (previous?.session?.accessToken == session.accessToken) return previous
         previous?.dispose()
         return AccountScope(session, endpoint, localHttp, store, engine,
-            { auth.session.value?.takeIf { it.accessToken == session.accessToken }?.let { auth.token() } }, auth::invalidate).also { account = it }
+            { auth.session.value?.takeIf { it.accessToken == session.accessToken }?.let { auth.token() } }, auth::invalidate, scheduleSync).also { account = it }
     }
     fun detach() { account?.dispose(); account = null }
     fun dispose() { detach(); models.clear() }
 }
 
 class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, store: SecureStore, engine: HttpEngine,
-    token: () -> String?, unauthorized: (String) -> Unit) {
+    token: () -> String?, unauthorized: (String) -> Unit, scheduleSync: () -> Unit = {}) {
     private val owner = "$endpoint:${session.role}:${session.companyId}:${session.userId}"
     val api = ApiClient(endpoint, localHttp, token, unauthorized, engine)
-    val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) { Unit } })
+    val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) { Unit } }, onPending = scheduleSync)
     val trip = RemoteTripRepository(HttpTripService(api, outbox), store, owner)
     val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, owner)
     val safety = RemoteSafetyRepository(api, outbox, store, owner)

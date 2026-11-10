@@ -18,7 +18,7 @@ data class PendingRequest(val id: String, val path: String, val body: ByteArray,
 fun interface PendingTransport { suspend fun send(request: PendingRequest): DomainResult<Unit> }
 
 class Outbox(private val store: SecureStore, owner: String, private val transport: PendingTransport,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO) {
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO, private val onPending: () -> Unit = {}) {
     private val key = "outbox:$owner"
     private val lock = Mutex()
     private fun read(): List<PendingRequest> = store.read(key)?.let { bytes ->
@@ -54,7 +54,7 @@ class Outbox(private val store: SecureStore, owner: String, private val transpor
         if (existing != null && (existing.path != request.path || existing.contentType != request.contentType || !existing.body.contentEquals(request.body))) {
             return@guarded invalid("REQUEST_ID_REUSED")
         }
-        if (existing == null) save(items + request)
+        if (existing == null) { save(items + request); runCatching(onPending) }
         deliver(existing ?: request)
     }
     suspend fun flush(): DomainResult<Int> = guarded {

@@ -26,7 +26,7 @@ class SafeBusApplication : Application() {
         sessionWatcher?.cancel()
         stopService(Intent(this, LocationTrackingService::class.java))
         mutableContainer.value?.dispose()
-        val next = if (ApiClient.validBaseUrl(endpoint, BuildConfig.DEBUG)) CoreContainer(endpoint, BuildConfig.DEBUG, EncryptedStore(this)) else null
+        val next = if (ApiClient.validBaseUrl(endpoint, BuildConfig.DEBUG)) CoreContainer(endpoint, BuildConfig.DEBUG, EncryptedStore(this), scheduleSync = { PendingSyncService.schedule(this) }) else null
         mutableContainer.value = next
         if (next != null) {
             sessionWatcher = scope.launch {

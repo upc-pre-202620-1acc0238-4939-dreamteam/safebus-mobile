@@ -12,6 +12,15 @@ class OutboxTest {
     private var answer: DomainResult<Unit> = DomainResult.Error(Failure(FailureKind.NETWORK))
     private val sent = mutableListOf<PendingRequest>()
     private fun box(owner: String = "account-1") = Outbox(store, owner, PendingTransport { sent.add(it); answer }, Dispatchers.Unconfined)
+    @Test fun schedulesBackgroundDeliveryOnlyAfterDurableWrite() = runBlocking {
+        var scheduled = 0
+        val box = Outbox(store, "owner", PendingTransport { answer }, Dispatchers.Unconfined, { assertTrue(store.values.isNotEmpty()); scheduled++ })
+        store.failWrites = true
+        assertTrue(box.submit(request) is DomainResult.Error)
+        assertEquals(0, scheduled); assertTrue(store.values.isEmpty())
+        store.failWrites = false; box.submit(request)
+        assertEquals(1, scheduled)
+    }
     @Test fun repeatedJourneyClosurePreservesOriginalTimestampAndReason() = runBlocking {
         val end = request.copy(id = "end:1", path = "/api/v1/journeys/1/end")
         box().submit(end, preserveExistingEnd = true)
