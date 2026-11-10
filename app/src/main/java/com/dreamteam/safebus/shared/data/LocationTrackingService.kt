@@ -66,10 +66,11 @@ class LocationTrackingService : Service(), LocationListener {
     override fun onLocationChanged(location: Location) {
         if (!location.hasAccuracy()) return
         latest = runCatching { Position(location.latitude, location.longitude, location.accuracy.toDouble(), Instant.ofEpochMilli(location.time)) }.getOrNull()
+        account?.rememberDriverPosition(latest)
     }
-    override fun onProviderDisabled(provider: String) { latest = null; account?.unavailable() }
+    override fun onProviderDisabled(provider: String) { latest = null; account?.rememberDriverPosition(null); account?.unavailable() }
     private fun permitted() = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
         checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-    override fun onDestroy() { locations.removeUpdates(this); scope.cancel(); latest = null; super.onDestroy() }
+    override fun onDestroy() { locations.removeUpdates(this); scope.cancel(); latest = null; account?.rememberDriverPosition(null); super.onDestroy() }
     companion object { private const val CHANNEL = "safebus-location" }
 }

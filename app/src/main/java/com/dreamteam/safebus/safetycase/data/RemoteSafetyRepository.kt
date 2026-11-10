@@ -3,6 +3,7 @@ package com.dreamteam.safebus.safetycase.data
 import com.dreamteam.safebus.safetycase.domain.*
 import com.dreamteam.safebus.shared.data.*
 import com.dreamteam.safebus.shared.domain.*
+import com.dreamteam.safebus.trip.domain.Position
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.time.Clock
@@ -29,7 +30,8 @@ fun PendingRequest.toPendingPassengerRequest(): PassengerRequest {
 }
 
 class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Outbox, private val store: SecureStore,
-    owner: String, private val clock: Clock = Clock.systemUTC(), private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : SafetyRepository {
+    owner: String, private val clock: Clock = Clock.systemUTC(), private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val driverPosition: () -> Position? = { null }) : SafetyRepository {
     private val key = "driver-alerts:$owner"
     private fun localAlerts(): List<Pair<String, Instant>> = store.read(key)?.toString(Charsets.UTF_8)?.lines()?.filter(String::isNotBlank)?.map {
         val parts = it.split('|'); UUID.fromString(parts[0]); parts[0] to Instant.parse(parts[1])
@@ -41,10 +43,11 @@ class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Out
     override suspend fun panic(shiftId: Long): DomainResult<Receipt> = withContext(dispatcher) {
         if (shiftId <= 0) return@withContext invalid("SHIFT_REQUIRED")
         val id = UUID.randomUUID().toString(); val at = clock.instant()
+        val position = driverPosition()?.takeIf { it.capturedAt <= at && it.capturedAt >= at.minusSeconds(60) }
         try {
             saveAlerts(localAlerts() + (id to at))
             when (val result = outbox.submit(PendingRequest(id, "/api/v1/driver-emergencies",
-                jsonBody("id" to id, "shiftId" to shiftId, "activatedAt" to at.toString()), "application/json"))) {
+                jsonBody("id" to id, "shiftId" to shiftId, "activatedAt" to at.toString(), "latitude" to position?.latitude, "longitude" to position?.longitude), "application/json"))) {
                 is DomainResult.Success -> DomainResult.Success(Receipt(id, result.value))
                 is DomainResult.Error -> {
                     if (result.failure.kind != FailureKind.UNAUTHORIZED) saveAlerts(localAlerts().filterNot { it.first == id })

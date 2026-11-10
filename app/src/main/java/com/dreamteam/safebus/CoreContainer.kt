@@ -18,6 +18,7 @@ import com.dreamteam.safebus.shared.domain.*
 import com.dreamteam.safebus.shared.ui.SyncViewModel
 import com.dreamteam.safebus.trip.data.*
 import com.dreamteam.safebus.trip.domain.ActiveShift
+import com.dreamteam.safebus.trip.domain.Position
 import com.dreamteam.safebus.trip.ui.TripViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,7 +68,8 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
     val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) { Unit } }, onPending = scheduleSync)
     val trip = RemoteTripRepository(HttpTripService(api, outbox), store, owner)
     val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, owner)
-    val safety = RemoteSafetyRepository(api, outbox, store, owner)
+    @Volatile private var latestDriverPosition: Position? = null
+    val safety = RemoteSafetyRepository(api, outbox, store, owner, driverPosition = { latestDriverPosition })
     val fleet = RemoteFleetRepository(api)
     val events = SupervisorEvents(endpoint, token, unauthorized)
     private val mutableShift = MutableStateFlow<ActiveShift?>(null)
@@ -108,7 +110,10 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
         updateTracking()
     }
     fun updateTracking() { mutableTracking.value = tracker?.state?.value ?: TrackingState() }
+    fun rememberDriverPosition(position: Position?) {
+        latestDriverPosition = position?.takeIf { session.role == Role.DRIVER && mutableShift.value != null }
+    }
     fun unavailable() { tracker?.unavailable(); updateTracking() }
-    fun stopTracking() { tracker?.stop(); tracker = null; mutableTracking.value = TrackingState() }
+    fun stopTracking() { tracker?.stop(); tracker = null; latestDriverPosition = null; mutableTracking.value = TrackingState() }
     fun dispose() { stopTracking(); models.clear() }
 }
