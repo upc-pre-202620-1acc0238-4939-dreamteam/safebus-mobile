@@ -12,22 +12,23 @@ data class CountingState(val sources: List<CountingSource> = emptyList(), val oc
     val credential: SourceCredential? = null, val loaded: Boolean = false)
 class CountingViewModel(private val repository: CountingRepository, val busId: Long,
     dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate) : TaskViewModel<CountingState>(CountingState(), dispatcher) {
-    fun refresh() = execute { old ->
+    private var credentialGeneration = 0
+    fun refresh() = execute {
         when (val sources = repository.sources(busId)) {
             is DomainResult.Error -> sources
-            is DomainResult.Success -> repository.occupancy(busId).map { old.copy(sources = sources.value, occupancy = it, loaded = true) }
+            is DomainResult.Success -> repository.occupancy(busId).map { state.value.value.copy(sources = sources.value, occupancy = it, loaded = true) }
         }
     }
-    fun register(label: String) = execute { old -> repository.register(busId, label).map { credential ->
-        old.copy(sources = old.sources.filterNot { it.id == credential.source.id } + credential.source, credential = credential)
-    } }
-    fun rotate(sourceId: Long) { clearCredential(); execute { old -> repository.rotate(busId, sourceId).map { credential ->
-        old.copy(sources = old.sources.map { if (it.id == sourceId) credential.source else it }, credential = credential)
+    fun register(label: String) { clearCredential(); val generation = credentialGeneration; execute { old -> repository.register(busId, label).map { credential ->
+        old.copy(sources = old.sources.filterNot { it.id == credential.source.id } + credential.source, credential = credential.takeIf { generation == credentialGeneration })
+    } } }
+    fun rotate(sourceId: Long) { clearCredential(); val generation = credentialGeneration; execute { old -> repository.rotate(busId, sourceId).map { credential ->
+        old.copy(sources = old.sources.map { if (it.id == sourceId) credential.source else it }, credential = credential.takeIf { generation == credentialGeneration })
     } } }
     fun revoke(sourceId: Long) { clearCredential(); execute { old -> repository.revoke(busId, sourceId).map { source ->
         old.copy(sources = old.sources.map { if (it.id == sourceId) source else it })
     } } }
-    fun clearCredential() { update(state.value.value.copy(credential = null)) }
+    fun clearCredential() { credentialGeneration++; update(state.value.value.copy(credential = null)) }
 }
 
 data class CounterUiState(val counter: CounterState = CounterState(), val heartbeat: Instant? = null)
