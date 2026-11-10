@@ -110,6 +110,44 @@
     <string name="empty_history">Empty alert history</string>
     <string name="mock_emergency_status">Simulated company status</string>
     <string name="reset_demo">Reset prototype</string>
+    <string name="core_refresh">Actualizar</string>
+    <string name="core_loading">Consultando el servidor…</string>
+    <string name="core_empty">No hay registros disponibles.</string>
+    <string name="core_network_error">No pudimos conectar. Revisa tu conexión y vuelve a intentarlo.</string>
+    <string name="core_auth_error">No se pudo validar el acceso. Revisa tus credenciales o inicia sesión de nuevo.</string>
+    <string name="core_forbidden">Tu cuenta no tiene acceso a este recurso.</string>
+    <string name="core_missing">El recurso ya no está disponible. Actualiza los datos.</string>
+    <string name="core_conflict">La operación entra en conflicto con el estado actual. Actualiza antes de volver a intentarlo.</string>
+    <string name="core_validation">Revisa los campos obligatorios, el código QR y los archivos adjuntos.</string>
+    <string name="core_rate_limit">Demasiados intentos. Espera un momento antes de volver a intentar.</string>
+    <string name="core_server_error">El servidor no pudo completar la operación. Inténtalo de nuevo.</string>
+    <string name="core_response_error">La respuesta del servidor no es compatible. No se guardaron datos de esa respuesta.</string>
+    <string name="core_storage_error">No se pudo guardar el estado de forma segura. Revisa el espacio disponible y vuelve a intentar.</string>
+    <string name="core_duplicate_request">Ya participaste en esta agrupación. Consulta Mis solicitudes.</string>
+    <string name="core_duplicate_dni">Este DNI ya está registrado. Inicia sesión con tu cuenta.</string>
+    <string name="core_bus_id_missing">Este QR no incluye el identificador del bus. Puedes viajar y enviar solicitudes; el historial y el cierre automático requieren un QR completo de la empresa.</string>
+    <string name="core_pending">Guardado en este dispositivo. Pendiente de envío al servidor.</string>
+    <string name="core_received">El servidor confirmó la recepción.</string>
+    <string name="core_confirm">Confirmar</string>
+    <string name="core_cancel">Cancelar</string>
+    <string name="core_back">Volver</string>
+    <string name="core_status_active">Activo</string>
+    <string name="core_status_attention">En atención</string>
+    <string name="core_status_closed">Cerrado</string>
+    <string name="core_status_pending">Pendiente de envío</string>
+    <string name="core_status_collecting">Reuniendo solicitudes</string>
+    <string name="core_status_review">Pendiente de revisión</string>
+    <string name="core_status_approved">Aprobado</string>
+    <string name="core_status_declined">Rechazado</string>
+    <string name="core_status_expired">Ventana finalizada</string>
+    <string name="core_status_attached">Adjuntado al caso</string>
+    <string name="core_status_late">Recibido fuera de ventana</string>
+    <string name="core_status_current">Actualizado</string>
+    <string name="core_status_stale">Último dato conocido</string>
+    <string name="core_status_unknown">Sin información disponible</string>
+    <string name="core_status_critical">Crítica · Conductor</string>
+    <string name="core_status_high">Alta · Pasajeros</string>
+    <string name="core_at">%1$s</string>
 </resources>
 
 

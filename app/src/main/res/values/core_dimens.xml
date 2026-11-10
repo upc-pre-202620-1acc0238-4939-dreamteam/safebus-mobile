@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="core_space">16dp</dimen>
+    <dimen name="core_gap">12dp</dimen>
+    <dimen name="core_small">8dp</dimen>
+    <dimen name="core_action_height">56dp</dimen>
+    <dimen name="core_emergency_height">72dp</dimen>
+    <dimen name="core_icon">24dp</dimen>
+    <dimen name="core_photo_height">220dp</dimen>
+</resources>

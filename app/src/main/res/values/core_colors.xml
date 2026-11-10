@@ -1,0 +1,10 @@
+<resources>
+    <color name="core_background">#10130C</color>
+    <color name="core_surface">#1C2118</color>
+    <color name="core_primary">#C3F400</color>
+    <color name="core_secondary">#596D0B</color>
+    <color name="core_text">#F3F6E9</color>
+    <color name="core_muted">#BCC4AE</color>
+    <color name="core_outline">#444D37</color>
+    <color name="core_emergency">#EF5350</color>
+</resources>
