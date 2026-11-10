@@ -6,8 +6,12 @@ import java.time.Instant
 
 data class FleetBus(val id: Long, val plate: String, val enabled: Boolean, val capacity: Int?, val shiftId: Long?,
     val route: String?, val driver: String?, val locationStatus: String, val position: Position?, val occupancyStatus: String,
-    val occupancyReason: String?, val count: Int?, val load: String?, val emergencyCount: Int, val pendingGroups: Int) {
+    val occupancyReason: String?, val count: Int?, val load: String?, val emergencyCount: Int, val pendingGroups: Int,
+    val lastCountAt: Instant? = null, val lastHeartbeatAt: Instant? = null, val groups: List<GroupCount> = emptyList()) {
     init { require(id > 0 && (capacity == null || capacity > 0) && (count == null || count >= 0)) }
+}
+data class GroupCount(val status: String, val contributors: Int, val attached: Int) {
+    init { require(contributors >= 0 && attached >= 0) }
 }
 data class FleetOverview(val buses: List<FleetBus>, val updatedAt: Instant)
 data class ProvisionReceipt(val id: Long, val credential: String? = null, val expiresAt: Instant? = null) {

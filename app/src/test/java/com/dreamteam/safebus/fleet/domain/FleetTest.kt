@@ -7,6 +7,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FleetTest {
+    @Test fun contributorAndAttachedCountsRemainDistinctAndNonNegative() {
+        val group = GroupCount("AWAITING_APPROVAL", 3, 2)
+        assertEquals(3, group.contributors); assertEquals(2, group.attached)
+        assertThrows(IllegalArgumentException::class.java) { GroupCount("COLLECTING", -1, 0) }
+    }
     @Test fun validatesAllProvisioningFormsWithoutPersistingInvalidChanges() = runBlocking {
         val saved = mutableListOf<FleetChange>()
         val repo = object : FleetRepository {

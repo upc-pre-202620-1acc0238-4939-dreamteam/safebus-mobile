@@ -38,11 +38,19 @@ import java.time.ZoneId
                 bus.capacity?.let { Text(stringResource(R.string.core_capacity_value, it)) }
                 StateLabel(bus.occupancyStatus)
                 bus.count?.let { Text(stringResource(R.string.core_count_value, it)) }
+                bus.lastCountAt?.let { Text(stringResource(R.string.core_count_time)); TimeLabel(it) }
+                bus.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
                 if (bus.load == "OVER_CAPACITY") Text(stringResource(R.string.core_over_capacity), color = MaterialTheme.colorScheme.error)
                 Text(stringResource(R.string.core_open_cases, bus.emergencyCount, bus.pendingGroups))
+                bus.groups.forEach { group ->
+                    StateLabel(group.status)
+                    Text(stringResource(R.string.core_contributors, group.contributors))
+                    if (group.attached > 0) Text(stringResource(R.string.core_attached_count, group.attached))
+                }
                 StateLabel(bus.locationStatus)
                 bus.position?.let { position ->
                     TimeLabel(position.capturedAt)
+                    Text(stringResource(R.string.core_coordinates, position.latitude, position.longitude))
                     CoreButton(R.string.core_open_map, "map:${bus.id}") {
                         try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${position.latitude},${position.longitude}?q=${position.latitude},${position.longitude}"))) }
                         catch (_: ActivityNotFoundException) { mapMissing = true }

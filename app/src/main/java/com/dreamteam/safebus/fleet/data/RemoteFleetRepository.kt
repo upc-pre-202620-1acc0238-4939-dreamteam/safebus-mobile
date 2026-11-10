@@ -17,7 +17,9 @@ fun JSONObject.toFleetBus(): FleetBus {
         optJSONObject("shift")?.optionalLong("shiftId"), optJSONObject("route")?.optionalString("name"), optJSONObject("driver")?.optionalString("fullName"),
         location.getString("status"), position, occupancy.getString("status"), occupancy.optionalString("reason"),
         occupancy.optionalInt("count"), occupancy.optionalString("load"), getJSONArray("emergencies").length(),
-        objects("passengerGroups").count { it.getString("status") == "AWAITING_APPROVAL" })
+        objects("passengerGroups").count { it.getString("status") == "AWAITING_APPROVAL" },
+        occupancy.optionalString("lastCountAt")?.let(Instant::parse), occupancy.optionalString("lastHeartbeatAt")?.let(Instant::parse),
+        objects("passengerGroups").map { GroupCount(it.getString("status"), it.getInt("requestCount"), it.getInt("attachedCount")) })
 }
 
 class RemoteFleetRepository(private val api: ApiClient) : FleetRepository {
