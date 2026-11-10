@@ -3,10 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 android {
-    namespace = "com.safebus.driver"
+    namespace = "com.dreamteam.safebus"
     compileSdk { version = release(37) }
     defaultConfig {
-        applicationId = "com.safebus.driver"
+        applicationId = "com.dreamteam.safebus"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -17,7 +17,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
+    buildTypes {
+        val configured = providers.gradleProperty("safebusApiUrl")
+        fun literal(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+        debug { buildConfigField("String", "API_BASE_URL", literal(configured.orElse("http://10.0.2.2:8080").get())) }
+        release { buildConfigField("String", "API_BASE_URL", literal(configured.orElse("").get())) }
+    }
     // Keep both bundled languages available to the in-app language selector.
     bundle { language { enableSplit = false } }
 }

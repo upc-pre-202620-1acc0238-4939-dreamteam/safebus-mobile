@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.*
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.dreamteam.safebus.shared.data.PhotoLoader
 import com.dreamteam.safebus.shared.domain.*
 import kotlinx.coroutines.*

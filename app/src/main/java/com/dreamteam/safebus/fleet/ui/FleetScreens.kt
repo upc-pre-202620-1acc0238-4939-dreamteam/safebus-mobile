@@ -12,7 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.dreamteam.safebus.fleet.domain.*
 import com.dreamteam.safebus.passenger.domain.BusQr
 import com.dreamteam.safebus.shared.domain.*

@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 
 @Composable
 fun AccountScreen(

@@ -19,7 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
 @Composable

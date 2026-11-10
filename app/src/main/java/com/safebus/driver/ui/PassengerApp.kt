@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
 private enum class PassengerPage { Journey, Scanner, Verified, BusAlerts, RequestForm, RequestReview, Requests, RequestDetails, Account, Ended }

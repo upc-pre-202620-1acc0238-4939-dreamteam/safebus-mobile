@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.dreamteam.safebus.shared.domain.Photo
 import com.dreamteam.safebus.shared.ui.*
 

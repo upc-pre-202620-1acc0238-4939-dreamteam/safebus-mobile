@@ -8,7 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 
 @Composable
 fun AssignmentsScreen(assignment: List<String>, onNew: () -> Unit) {

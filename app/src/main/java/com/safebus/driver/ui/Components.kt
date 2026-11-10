@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.VisualTransformation
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
 @Composable

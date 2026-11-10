@@ -1,6 +1,6 @@
 package com.safebus.driver.ui
 
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
 enum class Page { Welcome, Login, Register, Shift, Scanner, Validated, Alerts, Account, Emergency, Details, HistoryDetails }

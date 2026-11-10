@@ -255,6 +255,8 @@
     <string name="core_catalog_note">Usa los identificadores confirmados por la empresa. El servidor actual permite registrar recursos, pero no consultar los catálogos completos de conductores y rutas.</string>
     <string name="core_enabled">Habilitado</string>
     <string name="core_disabled">Deshabilitado</string>
+    <string name="core_tracking_channel">Seguimiento del viaje</string>
+    <string name="core_tracking_notification">SafeBus está utilizando la ubicación durante tu recorrido.</string>
 </resources>
 
 

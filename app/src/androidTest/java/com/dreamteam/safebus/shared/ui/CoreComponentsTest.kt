@@ -3,7 +3,7 @@ package com.dreamteam.safebus.shared.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.dreamteam.safebus.shared.domain.*
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import org.junit.Rule
 import org.junit.Test
 

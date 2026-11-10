@@ -8,7 +8,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.unit.sp
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 
 object SafeBusColors {
     val Primary = Color(0xFF0D2C54)

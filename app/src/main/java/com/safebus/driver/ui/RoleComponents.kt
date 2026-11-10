@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
 data class RoleDestination(val id: String, val label: Int, val icon: Int, val enabled: Boolean = true, val badge: Int = 0)

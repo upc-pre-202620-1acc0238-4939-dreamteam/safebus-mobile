@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import com.safebus.driver.R
+import com.dreamteam.safebus.R
 import com.dreamteam.safebus.shared.domain.*
 import java.time.Instant
 import java.time.ZoneId
