@@ -192,6 +192,16 @@
     <string name="core_tracking_manual">Sin ubicación precisa disponible. El pasajero puede cerrar su viaje manualmente.</string>
     <string name="core_tracking_failed">El seguimiento necesita atención. Revisa la conexión o los permisos.</string>
     <string name="core_tracking_ended">Viaje cerrado automáticamente al detectar separación continua del bus.</string>
+    <string name="core_journey">Mi viaje</string>
+    <string name="core_start_journey">Validar bus e iniciar viaje</string>
+    <string name="core_journey_intro">Lee el QR de tu bus para consultar la empresa, la ruta y el conductor.</string>
+    <string name="core_journey_active">Viaje activo</string>
+    <string name="core_driver_name">Conductor: %1$s</string>
+    <string name="core_request_new">Enviar solicitud de seguridad</string>
+    <string name="core_end_journey">Finalizar viaje</string>
+    <string name="core_end_journey_detail">Se desvinculará tu cuenta del bus. Conservarás tus solicitudes y sus respuestas.</string>
+    <string name="core_journey_ended">Tu viaje finalizó en este dispositivo.</string>
+    <string name="core_company_verified">Empresa validada</string>
 </resources>
 
 

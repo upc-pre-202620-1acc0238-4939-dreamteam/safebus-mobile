@@ -94,7 +94,8 @@ fun failureText(failure: Failure): Int = when (failure.code) {
 }
 @Composable fun StateLabel(value: String) {
     val label = when (value) {
-        "ACTIVE", "ASSIGNED", "VERIFIED" -> R.string.core_status_active
+        "ACTIVE", "ASSIGNED" -> R.string.core_status_active
+        "VERIFIED", "VALIDATED" -> R.string.core_company_verified
         "IN_PROGRESS" -> R.string.core_status_attention
         "CLOSED", "ENDED" -> R.string.core_status_closed
         "PENDING" -> R.string.core_status_pending
