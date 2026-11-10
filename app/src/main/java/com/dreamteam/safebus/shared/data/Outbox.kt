@@ -46,9 +46,11 @@ class Outbox(private val store: SecureStore, owner: String, private val transpor
         store.write(key, bytes.toByteArray())
     }
     suspend fun count(): DomainResult<Int> = guarded { DomainResult.Success(read().size) }
-    suspend fun submit(request: PendingRequest): DomainResult<Delivery> = guarded {
+    suspend fun submit(request: PendingRequest, preserveExistingEnd: Boolean = false): DomainResult<Delivery> = guarded {
         val items = read()
         val existing = items.find { it.id == request.id }
+        if (preserveExistingEnd && !request.path.matches(Regex("/api/v1/journeys/[0-9]+/end"))) return@guarded invalid("INVALID_END_RETRY")
+        if (preserveExistingEnd && existing?.path == request.path) return@guarded deliver(existing)
         if (existing != null && (existing.path != request.path || existing.contentType != request.contentType || !existing.body.contentEquals(request.body))) {
             return@guarded invalid("REQUEST_ID_REUSED")
         }

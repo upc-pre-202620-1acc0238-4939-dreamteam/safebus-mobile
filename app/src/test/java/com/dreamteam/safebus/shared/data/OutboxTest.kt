@@ -12,6 +12,14 @@ class OutboxTest {
     private var answer: DomainResult<Unit> = DomainResult.Error(Failure(FailureKind.NETWORK))
     private val sent = mutableListOf<PendingRequest>()
     private fun box(owner: String = "account-1") = Outbox(store, owner, PendingTransport { sent.add(it); answer }, Dispatchers.Unconfined)
+    @Test fun repeatedJourneyClosurePreservesOriginalTimestampAndReason() = runBlocking {
+        val end = request.copy(id = "end:1", path = "/api/v1/journeys/1/end")
+        box().submit(end, preserveExistingEnd = true)
+        answer = DomainResult.Success(Unit)
+        assertEquals(Delivery.ACKNOWLEDGED, (box().submit(end.copy(body = "new timestamp".toByteArray()), preserveExistingEnd = true) as DomainResult.Success).value)
+        assertArrayEquals(end.body, sent.last().body)
+        assertTrue(store.values.isEmpty())
+    }
     @Test fun retriesExactOriginalPayloadAcrossRestartAndIsolatesAccounts() = runBlocking {
         assertEquals(Delivery.PENDING, (box().submit(request) as DomainResult.Success).value)
         assertEquals(0, (box("account-2").count() as DomainResult.Success).value)

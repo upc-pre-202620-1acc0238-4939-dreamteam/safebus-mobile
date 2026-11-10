@@ -34,6 +34,9 @@ data class Registration(val dni: String, val password: String, val acceptedTerms
 enum class EndReason { MANUAL, AUTOMATIC_SEPARATION, SIGN_OUT }
 data class Separation(val meters: Int, val seconds: Int)
 
+fun journeyEndTime(startedAt: Instant, deviceTime: Instant, separation: Separation?): Instant =
+    maxOf(deviceTime, startedAt.plusSeconds(separation?.seconds?.toLong() ?: 0))
+
 interface PassengerRepository {
     suspend fun register(input: Registration): DomainResult<Long>
     suspend fun restore(): DomainResult<Journey?>

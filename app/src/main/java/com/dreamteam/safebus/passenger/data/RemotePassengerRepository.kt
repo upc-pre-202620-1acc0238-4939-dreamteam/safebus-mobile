@@ -40,7 +40,7 @@ class HttpPassengerService(private val api: ApiClient, private val outbox: Outbo
     override suspend fun end(journey: Journey, reason: EndReason, separation: Separation?): DomainResult<Delivery> {
         val summary = separation?.let { JSONObject().put("separationDistanceMeters", it.meters).put("separationDurationSeconds", it.seconds) }
         return outbox.submit(PendingRequest("end:${journey.id}", "/api/v1/journeys/${journey.id}/end",
-            jsonBody("reason" to reason.name, "endedAt" to clock.instant().toString(), "summary" to summary), "application/json"))
+            jsonBody("reason" to reason.name, "endedAt" to journeyEndTime(journey.startedAt, clock.instant(), separation).toString(), "summary" to summary), "application/json"), preserveExistingEnd = true)
     }
     override suspend fun location(busId: Long) = api.call("GET", "/api/v1/vehicles/$busId/location") {
         val dto = it.json()

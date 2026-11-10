@@ -8,6 +8,11 @@ import org.junit.Test
 
 class PassengerTest {
     private val now = Instant.parse("2026-11-10T12:00:00Z")
+    @Test fun endTimeNeverPrecedesAcknowledgedStartOrMeasuredSeparation() {
+        assertEquals(now, journeyEndTime(now, now.minusSeconds(2), null))
+        assertEquals(now.plusSeconds(60), journeyEndTime(now, now.plusSeconds(58), Separation(200, 60)))
+        assertEquals(now.plusSeconds(90), journeyEndTime(now, now.plusSeconds(90), Separation(200, 60)))
+    }
     @Test fun qrPreservesRawCredentialsAndOptionalBusIdentifier() {
         assertEquals(BusQr("raw-code"), BusQr.parse(" raw-code "))
         val qr = BusQr("code+&?private", 9)
