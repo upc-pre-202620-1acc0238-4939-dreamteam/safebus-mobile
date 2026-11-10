@@ -31,7 +31,7 @@ fun PendingRequest.toPendingPassengerRequest(): PassengerRequest {
 
 class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Outbox, private val store: SecureStore,
     owner: String, private val clock: Clock = Clock.systemUTC(), private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val driverPosition: () -> Position? = { null }) : SafetyRepository {
+    private val driverPosition: () -> Position? = { null }) : SafetyRepository, RequestDetailRepository {
     private val key = "driver-alerts:$owner"
     private fun localAlerts(): List<Pair<String, Instant>> = store.read(key)?.toString(Charsets.UTF_8)?.lines()?.filter(String::isNotBlank)?.map {
         val parts = it.split('|'); UUID.fromString(parts[0]); parts[0] to Instant.parse(parts[1])
@@ -98,6 +98,8 @@ class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Out
             is DomainResult.Error -> if (remote.failure.retryable && pending.isNotEmpty()) DomainResult.Success(pending) else remote
         }
     }
+    override suspend fun detail(id: String): DomainResult<PassengerRequest> = if (!validId(id)) invalid("INVALID_REQUEST") else
+        api.call("GET", "/api/v1/passenger-requests/mine/$id") { it.json().toPassengerRequest().also { request -> require(request.id == id) } }
     override suspend fun history(busId: Long) = api.call("GET", "/api/v1/vehicles/$busId/safety-history") {
         it.json().objects("items").map { dto -> SafetyEntry(dto.getString("reference"), dto.getString("source"), dto.getString("state"),
             Instant.parse(dto.getString("recordedAt")), dto.optionalInt("requestCount")) }
