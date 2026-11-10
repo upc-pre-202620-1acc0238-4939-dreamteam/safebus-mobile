@@ -24,13 +24,13 @@ import java.util.UUID
 import kotlin.random.Random
 
 class BackendIntegrationTest {
-    private class MemoryStore : SecureStore {
+    internal class MemoryStore : SecureStore {
         val data = mutableMapOf<String, ByteArray>()
         @Synchronized override fun read(key: String) = data[key]?.copyOf()
         @Synchronized override fun write(key: String, value: ByteArray) { data[key] = value.copyOf() }
         @Synchronized override fun remove(key: String) { data.remove(key) }
     }
-    private class Client(endpoint: String) {
+    internal class Client(endpoint: String) {
         val store = MemoryStore()
         @Volatile var offline = false
         private val engine = HttpEngine { if (offline) throw IOException("Test connection interrupted") else UrlConnectionEngine().execute(it) }
