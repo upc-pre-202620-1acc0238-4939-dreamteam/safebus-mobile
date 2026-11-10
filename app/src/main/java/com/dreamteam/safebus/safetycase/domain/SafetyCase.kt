@@ -9,7 +9,7 @@ data class Emergency(val id: String, val status: String, val priority: String, v
     init { UUID.fromString(id); require(busId == null || busId > 0) }
 }
 data class PassengerRequest(val id: String, val message: String, val status: String, val submittedAt: Instant,
-    val contributorCount: Int?, val groupReference: String?, val decision: String?, val response: String?) {
+    val contributorCount: Int?, val groupReference: String?, val decision: String?, val response: String?, val decidedAt: Instant? = null) {
     init { UUID.fromString(id); require(contributorCount == null || contributorCount >= 0) }
 }
 data class ReviewGroup(val id: Long, val reference: String, val busId: Long, val contributors: Int, val requests: List<PassengerRequest>) {

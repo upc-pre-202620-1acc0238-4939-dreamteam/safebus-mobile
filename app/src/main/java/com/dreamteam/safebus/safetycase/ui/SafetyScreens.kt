@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.shared.domain.Photo
+import com.dreamteam.safebus.shared.domain.Delivery
 import com.dreamteam.safebus.shared.ui.*
 
 enum class SafetyTab { DRIVER_ALERTS, REQUESTS, HISTORY, EMERGENCIES, REVIEWS }
@@ -68,13 +69,15 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                 state.value.requests.forEach { request -> CoreCard(stringResource(R.string.core_case_reference, request.id)) {
                     Text(request.message); StateLabel(request.status); TimeLabel(request.submittedAt)
                     request.contributorCount?.let { Text(stringResource(R.string.core_contributors, it)) }
-                    request.decision?.let { StateLabel(it) }; request.response?.let { Text(it) }
-                    CoreButton(R.string.core_view_photo, "evidence:${request.id}", !state.busy) { evidence(request.id) }
+                    request.decision?.let { StateLabel(it) }; request.decidedAt?.let { TimeLabel(it) }; request.response?.let { Text(it) }
+                    if (request.status == "PENDING") DeliveryNotice(Delivery.PENDING)
+                    CoreButton(R.string.core_view_photo, "evidence:${request.id}", !state.busy && request.status != "PENDING") { evidence(request.id) }
                 } }
             }
             SafetyTab.HISTORY -> {
                 if (state.value.history.isEmpty() && state.value.loaded) Text(stringResource(R.string.core_empty))
                 state.value.history.forEach { item -> CoreCard(item.reference) {
+                    Text(stringResource(if (item.source == "DRIVER") R.string.core_role_driver else R.string.core_role_passenger))
                     StateLabel(item.state); TimeLabel(item.recordedAt)
                     item.count?.let { Text(stringResource(R.string.core_contributors, it)) }
                 } }

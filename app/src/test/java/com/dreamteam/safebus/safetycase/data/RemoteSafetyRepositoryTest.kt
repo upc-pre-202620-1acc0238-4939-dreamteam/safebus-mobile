@@ -9,6 +9,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RemoteSafetyRepositoryTest {
+    @Test fun ownPendingRequestRemainsVisibleOfflineWithoutThresholdContribution() = runBlocking {
+        val store = MemoryStore()
+        val id = "00000000-0000-0000-0000-000000000001"
+        val upload = multipart(mapOf("id" to id, "journeyId" to "1", "message" to "Private\nincident", "activatedAt" to "2026-11-10T12:00:00Z"), "photo", byteArrayOf(1), "image/png")
+        val outbox = Outbox(store, "owner", PendingTransport { DomainResult.Error(Failure(FailureKind.NETWORK)) }, Dispatchers.Unconfined)
+        outbox.submit(PendingRequest(id, "/api/v1/passenger-requests", upload.bytes, upload.contentType))
+        val api = ApiClient("https://example.com", false, { "token" }, {}, HttpEngine { throw java.io.IOException() }, Dispatchers.Unconfined)
+        val repo = RemoteSafetyRepository(api, outbox, store, "owner", dispatcher = Dispatchers.Unconfined)
+        val pending = (repo.mine() as DomainResult.Success).value.single()
+        assertEquals("PENDING", pending.status); assertEquals("Private\nincident", pending.message)
+        assertNull(pending.contributorCount); assertNull(pending.decision)
+        assertEquals(1, (outbox.count() as DomainResult.Success).value)
+    }
     @Test fun rejectedDriverAlertIsNotMisrepresentedAsPendingOrKeptLocally() = runBlocking {
         val store = MemoryStore()
         store.write("driver-alerts:owner", "00000000-0000-0000-0000-000000000001|2026-11-10T12:00:00Z".toByteArray())

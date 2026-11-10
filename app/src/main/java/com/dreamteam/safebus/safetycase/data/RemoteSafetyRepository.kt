@@ -17,7 +17,15 @@ fun JSONObject.toPassengerRequest(review: Boolean = false): PassengerRequest {
     val decision = optJSONObject("decision")
     return PassengerRequest(getString("requestId"), getString("message"), getString("status"),
         Instant.parse(getString(if (review) "activatedAt" else "submittedAt")), optionalInt("contributorCount"),
-        optionalString("groupReference"), decision?.optionalString("result"), decision?.optionalString("response"))
+        optionalString("groupReference"), decision?.optionalString("result"), decision?.optionalString("response"), decision?.optionalString("decidedAt")?.let(Instant::parse))
+}
+
+fun PendingRequest.toPendingPassengerRequest(): PassengerRequest {
+    require(path == "/api/v1/passenger-requests")
+    val boundary = contentType.substringAfter("boundary=").also { require(it.startsWith("SafeBus")) }
+    val prefix = body.copyOfRange(0, minOf(body.size, 8192)).toString(Charsets.UTF_8)
+    fun field(name: String): String = requireNotNull(Regex("Content-Disposition: form-data; name=\"$name\"\\r\\n\\r\\n(.*?)\\r\\n--${Regex.escape(boundary)}", RegexOption.DOT_MATCHES_ALL).find(prefix)).groupValues[1]
+    return PassengerRequest(id, field("message"), "PENDING", Instant.parse(field("activatedAt")), null, null, null, null)
 }
 
 class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Outbox, private val store: SecureStore,
@@ -76,7 +84,17 @@ class RemoteSafetyRepository(private val api: ApiClient, private val outbox: Out
             "activatedAt" to clock.instant().toString()), "photo", photo.bytes, photo.mime)
         return outbox.submit(PendingRequest(id, "/api/v1/passenger-requests", upload.bytes, upload.contentType)).map { Receipt(id, it) }
     }
-    override suspend fun mine() = api.call("GET", "/api/v1/passenger-requests/mine") { it.json().objects("items").map { dto -> dto.toPassengerRequest() } }
+    override suspend fun mine(): DomainResult<List<PassengerRequest>> {
+        val pending = when (val records = outbox.requests("/api/v1/passenger-requests")) {
+            is DomainResult.Error -> return records
+            is DomainResult.Success -> try { records.value.map(PendingRequest::toPendingPassengerRequest) }
+                catch (_: Exception) { return DomainResult.Error(Failure(FailureKind.STORAGE)) }
+        }
+        return when (val remote = api.call("GET", "/api/v1/passenger-requests/mine") { it.json().objects("items").map { dto -> dto.toPassengerRequest() } }) {
+            is DomainResult.Success -> DomainResult.Success((remote.value + pending).distinctBy { it.id }.sortedByDescending { it.submittedAt })
+            is DomainResult.Error -> if (remote.failure.retryable && pending.isNotEmpty()) DomainResult.Success(pending) else remote
+        }
+    }
     override suspend fun history(busId: Long) = api.call("GET", "/api/v1/vehicles/$busId/safety-history") {
         it.json().objects("items").map { dto -> SafetyEntry(dto.getString("reference"), dto.getString("source"), dto.getString("state"),
             Instant.parse(dto.getString("recordedAt")), dto.optionalInt("requestCount")) }

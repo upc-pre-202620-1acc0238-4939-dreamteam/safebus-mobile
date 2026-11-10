@@ -47,6 +47,7 @@ class Outbox(private val store: SecureStore, owner: String, private val transpor
     }
     suspend fun count(): DomainResult<Int> = guarded { DomainResult.Success(read().size) }
     suspend fun identifiers(): DomainResult<Set<String>> = guarded { DomainResult.Success(read().map { it.id }.toSet()) }
+    suspend fun requests(path: String): DomainResult<List<PendingRequest>> = guarded { DomainResult.Success(read().filter { it.path == path }) }
     suspend fun submit(request: PendingRequest, preserveExistingEnd: Boolean = false): DomainResult<Delivery> = guarded {
         val items = read()
         val existing = items.find { it.id == request.id }

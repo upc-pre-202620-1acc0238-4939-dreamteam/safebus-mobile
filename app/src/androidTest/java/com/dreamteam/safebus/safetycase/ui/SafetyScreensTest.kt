@@ -12,6 +12,13 @@ import org.junit.Test
 
 class SafetyScreensTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun pendingRequestDoesNotExposeRemoteEvidenceBeforeAcknowledgement() {
+        val id = "00000000-0000-0000-0000-000000000001"
+        val request = PassengerRequest(id, "Pending report", "PENDING", Instant.EPOCH, null, null, null, null)
+        compose.setContent { CoreTheme { SafetyListScreen(ScreenState(SafetyState(requests = listOf(request))), SafetyTab.REQUESTS, {}, {}, {}) } }
+        compose.onNodeWithTag("deliveryNotice").assertExists()
+        compose.onNodeWithTag("evidence:$id").assertIsNotEnabled()
+    }
     @Test fun requestCannotSubmitWithoutAnIncidentPhotoEvenAfterAnError() {
         var submitted = 0
         compose.setContent { CoreTheme { RequestFormScreen(ScreenState(SafetyState(), failure = Failure.fromStatus(422)), { _, _ -> submitted++ }, {}) } }
