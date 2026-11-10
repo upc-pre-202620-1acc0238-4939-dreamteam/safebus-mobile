@@ -13,7 +13,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.util.UUID
 
-data class ApiRequest(val method: String, val url: String, val token: String?, val body: ByteArray? = null, val contentType: String? = null) {
+data class ApiRequest(val method: String, val url: String, val token: String?, val body: ByteArray? = null, val contentType: String? = null, val countingKey: String? = null) {
     override fun toString(): String = "ApiRequest(method=$method)"
 }
 data class ApiResponse(val status: Int, val bytes: ByteArray, val contentType: String = "application/json")
@@ -30,6 +30,7 @@ class UrlConnectionEngine : HttpEngine {
             connection.useCaches = false
             connection.setRequestProperty("Accept", "application/json, image/jpeg, image/png")
             request.token?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            request.countingKey?.let { connection.setRequestProperty("X-Counting-Source-Key", it) }
             request.body?.let { bytes ->
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", request.contentType)
@@ -62,6 +63,7 @@ class ApiClient(
     private val engine: HttpEngine = UrlConnectionEngine(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val errorCode: (ByteArray) -> String = { runCatching { JSONObject(it.toString(Charsets.UTF_8)).optString("code") }.getOrDefault("") },
+    private val deviceAuthentication: Boolean = false,
 ) {
     init { require(validBaseUrl(baseUrl, allowLocalHttp)) }
 
@@ -71,9 +73,14 @@ class ApiClient(
             return@withContext DomainResult.Error(Failure(FailureKind.VALIDATION, "INVALID_ENDPOINT"))
         }
         val credential = if (authenticated) token() else null
+        if (deviceAuthentication && (method != "POST" || path !in setOf("/api/v1/occupancy-initializations", "/api/v1/occupancy-heartbeats", "/api/v1/occupancy-events"))) {
+            return@withContext DomainResult.Error(Failure(FailureKind.FORBIDDEN))
+        }
         if (authenticated && credential == null) return@withContext DomainResult.Error(Failure(FailureKind.UNAUTHORIZED))
+        if (credential?.any { it == '\r' || it == '\n' } == true) return@withContext DomainResult.Error(Failure(FailureKind.VALIDATION))
         try {
-            val response = engine.execute(ApiRequest(method, baseUrl.trimEnd('/') + path, credential, body, contentType))
+            val response = engine.execute(ApiRequest(method, baseUrl.trimEnd('/') + path, if (deviceAuthentication) null else credential, body, contentType,
+                if (deviceAuthentication) credential else null))
             if (authenticated && token() != credential) return@withContext DomainResult.Error(Failure(FailureKind.UNAUTHORIZED))
             if (response.status in 200..299) DomainResult.Success(decode(response))
             else {
