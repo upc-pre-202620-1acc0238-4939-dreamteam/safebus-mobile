@@ -148,6 +148,15 @@
     <string name="core_status_critical">Crítica · Conductor</string>
     <string name="core_status_high">Alta · Pasajeros</string>
     <string name="core_at">%1$s</string>
+    <string name="core_photo_choose">Seleccionar fotografía</string>
+    <string name="core_photo_selected">Fotografía seleccionada</string>
+    <string name="core_photo_hint">JPEG o PNG · hasta 5 MB · la foto se envía de forma privada.</string>
+    <string name="core_photo_invalid">Selecciona una imagen JPEG o PNG válida de hasta 5 MB y 25 megapíxeles.</string>
+    <string name="core_photo_description">Evidencia fotográfica privada</string>
+    <string name="core_qr_content">Contenido del código QR</string>
+    <string name="core_qr_scan">Abrir lector QR</string>
+    <string name="core_qr_hint">Escanea con un lector compatible o pega el contenido del QR proporcionado por la empresa.</string>
+    <string name="core_qr_no_scanner">No hay un lector QR compatible instalado. Puedes pegar el contenido del código.</string>
 </resources>
 
 
