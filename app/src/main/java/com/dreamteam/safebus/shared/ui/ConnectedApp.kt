@@ -1,5 +1,12 @@
 package com.dreamteam.safebus.shared.ui
 
+import android.content.res.Configuration
+import java.util.Locale
+import androidx.core.content.edit
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import com.dreamteam.safebus.iam.ui.LanguageOptions
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -47,6 +54,21 @@ fun destinations(role: Role): List<Destination> = when (role) {
 fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driver; Role.PASSENGER -> R.string.core_role_passenger; Role.SUPERVISOR -> R.string.core_role_supervisor }
 
 @Composable fun ConnectedApp(application: SafeBusApplication, lifecycle: Lifecycle) {
+    val context = LocalContext.current
+    val preferences = remember { application.getSharedPreferences("presentation", android.content.Context.MODE_PRIVATE) }
+    var language by rememberSaveable { mutableStateOf(preferences.getString("language", "en") ?: "en") }
+    val system = LocalConfiguration.current
+    val configuration = remember(language, system) { Configuration(system).apply { setLocale(Locale.forLanguageTag(language)) } }
+    val localized = remember(context, configuration) { android.view.ContextThemeWrapper(context, R.style.Theme_SafeBus).apply { applyOverrideConfiguration(configuration) } }
+    CompositionLocalProvider(LocalContext provides localized, LocalConfiguration provides configuration) {
+        ConnectedContent(application, lifecycle, language) { selected ->
+            language = selected
+            preferences.edit { putString("language", selected) }
+        }
+    }
+}
+
+@Composable private fun ConnectedContent(application: SafeBusApplication, lifecycle: Lifecycle, language: String, onLanguage: (String) -> Unit) {
     val container by application.container.collectAsState()
     var settings by rememberSaveable { mutableStateOf(false) }
     var contact by rememberSaveable { mutableStateOf(false) }
@@ -79,10 +101,10 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                 val service by current.serviceModel.state.collectAsState()
                 LaunchedEffect(current) { current.serviceModel.restore() }
                 Scaffold { padding -> Box(Modifier.padding(padding)) { ContactScreen(service, current.serviceModel::submit, current.serviceModel::clear, current.serviceModel::health, { contact = false }) } }
-            } else if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, current.authModel::register, { settings = true }, { contact = true }) } }
+            } else if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, current.authModel::register, { settings = true }, { contact = true }, language, onLanguage) } }
             else key(session.accessToken) {
                 val account = remember { current.bind(session) }
-                AccountWorkspace(application, account, lifecycle) {
+                AccountWorkspace(application, account, lifecycle, language, onLanguage) {
                     application.stopService(Intent(application, LocationTrackingService::class.java))
                     current.authModel.signOut()
                 }
@@ -107,7 +129,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
     }
 }
 
-@Composable private fun AccountWorkspace(application: SafeBusApplication, account: AccountScope, lifecycle: Lifecycle, signOut: () -> Unit) {
+@Composable private fun AccountWorkspace(application: SafeBusApplication, account: AccountScope, lifecycle: Lifecycle, language: String, onLanguage: (String) -> Unit, signOut: () -> Unit) {
     val tabs = destinations(account.session.role)
     var tab by rememberSaveable { mutableStateOf(tabs.first()) }
     var requestForm by rememberSaveable { mutableStateOf(false) }
@@ -190,16 +212,26 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
     Scaffold(bottomBar = {
         Column {
             if (account.session.role == Role.DRIVER && shift != null) {
-                Column(Modifier.padding(horizontal = dimensionResource(R.dimen.core_space))) {
+                Column(Modifier.padding(horizontal = dimensionResource(R.dimen.core_space), vertical = dimensionResource(R.dimen.core_emergency_gap))) {
                     panic.failure?.let { FailureNotice(it) }
                     panic.value?.let { DeliveryNotice(it.delivery) }
                     CoreButton(R.string.core_emergency, "realPanic", !panic.busy, danger = true) { account.panicModel.panic(shift?.id) }
                 }
             }
-            NavigationBar { tabs.forEach { destination ->
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = dimensionResource(R.dimen.core_tiny),
+                modifier = Modifier.heightIn(min = dimensionResource(R.dimen.core_navigation_height) * LocalDensity.current.fontScale.coerceAtLeast(1f))) { tabs.forEach { destination ->
+                val badgeCount = when (destination) {
+                    Destination.EMERGENCIES -> safety.value.queue?.emergencies?.size ?: 0
+                    Destination.REVIEWS -> safety.value.queue?.groups?.size ?: 0
+                    else -> 0
+                }
                 NavigationBarItem(selected = tab == destination, onClick = { tab = destination; requestForm = false; selectedBus = null; requestDetail = null; account.requestDetailModel.clear(); account.safetyModel.clearEvidence() },
                     enabled = destination != Destination.HISTORY || journey != null, modifier = Modifier.testTag("nav:${destination.name}"),
-                    icon = { Icon(painterResource(destination.icon), contentDescription = null) }, label = { Text(stringResource(destination.label), maxLines = 2) })
+                    icon = { BadgedBox(badge = { if (badgeCount > 0) Badge(containerColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_pending else R.color.core_emergency),
+                        contentColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_text else R.color.core_white)) { Text(badgeCount.toString()) } }) { CoreIcon(destination.icon) } },
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.onSecondary, selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        indicatorColor = MaterialTheme.colorScheme.secondary, unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                    label = { Text(stringResource(destination.label), style = MaterialTheme.typography.labelSmall) })
             } }
         }
     }) { padding ->
@@ -221,7 +253,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                     tab == Destination.JOURNEY -> JourneyScreen(passenger, tracking, account.passengerModel::start, account.passengerModel::end, { account.safetyModel.clearReceipt(); requestForm = true }, requestPermission)
                     tab == Destination.FLEET -> FleetScreen(fleet, account.fleetModel::refresh) { selectedBus = it }
                     tab == Destination.ASSIGNMENTS -> ProvisionScreen(fleet, account.fleetModel::save, account.fleetModel::clearReceipt)
-                    tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, sync, account.syncModel::retry, signOut)
+                    tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, sync, account.syncModel::retry, signOut, language, onLanguage)
                     tab == Destination.HISTORY && journey == null -> CorePage(R.string.core_bus_alerts) { Text(stringResource(R.string.core_history_requires_journey)) }
                     else -> {
                         val mode = when (tab) {
@@ -259,13 +291,18 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         if (bus.shiftId != null && sourceId != null) { { model.clearCredential(); counter = true } } else null, back)
 }
 
-@Composable private fun AccountScreen(role: Role, user: String, sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit) {
+@Composable private fun AccountScreen(role: Role, user: String, sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit, language: String, onLanguage: (String) -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     CorePage(R.string.core_account) {
-        Text(stringResource(roleLabel(role))); Text(stringResource(R.string.core_user_id, user))
+        CoreCard(stringResource(roleLabel(role))) {
+            CoreIcon(R.drawable.ic_account_circle)
+            Text(stringResource(R.string.core_user_id, user))
+        }
+        Text(stringResource(R.string.ui_account_help))
+        LanguageOptions(language, onLanguage)
         Text(stringResource(R.string.core_sync_count, sync.value ?: 0))
         CoreButton(R.string.core_sync_retry, "retryPending", !sync.busy, action = retry)
-        CoreButton(R.string.core_sign_out, "realSignOut") { confirm = true }
+        CoreButton(R.string.core_sign_out, "realSignOut", secondary = true, icon = R.drawable.ic_logout) { confirm = true }
     }
     if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text(stringResource(R.string.core_sign_out)) },
         text = { Text(stringResource(R.string.core_sign_out_detail)) }, confirmButton = { TextButton({ confirm = false; signOut() }, Modifier.testTag("confirmRealSignOut")) { Text(stringResource(R.string.core_confirm)) } },

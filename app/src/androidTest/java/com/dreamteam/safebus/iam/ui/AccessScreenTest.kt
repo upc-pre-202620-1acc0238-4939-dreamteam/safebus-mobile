@@ -13,6 +13,7 @@ class AccessScreenTest {
     @Test fun loginRequiresCredentialsAndDoesNotAdvertiseDemoAccounts() {
         var submitted: Pair<String, String>? = null
         compose.setContent { CoreTheme { AccessScreen(ScreenState(AuthState()), { a, b -> submitted = a to b }, {}, {}) } }
+        compose.onNodeWithTag("welcomeLogin").performScrollTo().performClick()
         compose.onNodeWithTag("coreSignIn").assertIsNotEnabled()
         listOf("conductor.demo", "supervisor.demo", "Safebus2024!").forEach { compose.onNodeWithText(it).assertDoesNotExist() }
         compose.onNodeWithTag("coreLoginId").performTextInput("test-account")
@@ -23,10 +24,36 @@ class AccessScreenTest {
     @Test fun registrationHasNoSamplePhotoAndAuthenticationErrorDoesNotNavigate() {
         var registrations = 0
         compose.setContent { CoreTheme { AccessScreen(ScreenState(AuthState(), failure = Failure.fromStatus(401)), { _, _ -> }, { registrations++ }, {}) } }
+        compose.onNodeWithTag("welcomeLogin").performScrollTo().performClick()
         compose.onNodeWithTag("coreError").assertExists()
         compose.onNodeWithTag("openRegistration").performScrollTo().performClick()
-        compose.onNodeWithTag("coreRegister").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("registrationNext").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("coreRegister").assertDoesNotExist()
         compose.onNodeWithTag("photoSelected").assertDoesNotExist()
         assertEquals(0, registrations)
+    }
+    @Test fun registrationFollowsDniPhotoAndTermsWithoutSubmittingIncompleteData() {
+        var registered = false
+        compose.setContent { CoreTheme { AccessScreen(ScreenState(AuthState()), { _, _ -> }, { registered = true }, {}) } }
+        compose.onNodeWithTag("welcomeRegister").performScrollTo().performClick()
+        compose.onNodeWithTag("coreLoginId").performTextInput("1234567")
+        compose.onNodeWithTag("registrationNext").assertIsNotEnabled()
+        compose.onNodeWithTag("coreLoginId").performTextInput("8")
+        compose.onNodeWithTag("registrationNext").performScrollTo().performClick()
+        compose.onNodeWithTag("choosePhoto").assertExists()
+        compose.onNodeWithTag("registrationNext").assertIsNotEnabled()
+        compose.onNodeWithTag("pageBack").performClick()
+        compose.onNodeWithTag("coreLoginId").assertTextContains("12345678")
+        assertFalse(registered)
+    }
+
+    @Test fun welcomeExposesLanguageAndServerAccessWithoutDemoCredentials() {
+        var language = ""
+        compose.setContent { CoreTheme { AccessScreen(ScreenState(AuthState()), { _, _ -> }, {}, {}, language = "en", onLanguage = { language = it }) } }
+        compose.onNodeWithTag("language:es").performClick()
+        assertEquals("es", language)
+        compose.onNodeWithTag("welcomeLogin").assertExists()
+        compose.onNodeWithTag("welcomeRegister").assertExists()
+        compose.onNodeWithTag("corePassword").assertDoesNotExist()
     }
 }

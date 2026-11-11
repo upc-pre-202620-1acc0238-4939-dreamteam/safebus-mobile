@@ -13,10 +13,11 @@ class ConnectedLaunchTest {
         compose.onNodeWithTag("contactCompany").assertExists()
         compose.onNodeWithTag("sendContact").assertIsNotEnabled()
         compose.onNodeWithTag("contactBack").performScrollTo().performClick()
-        compose.onNodeWithTag("coreSignIn").assertExists()
+        compose.onNodeWithTag("welcomeLogin").assertExists()
     }
     @Test fun productionLauncherOpensConnectedAccessWithoutPrototypeControls() {
-        compose.waitUntil(10000) { compose.onAllNodesWithTag("coreSignIn").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("welcomeLogin").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("welcomeLogin").performScrollTo().performClick()
         compose.onNodeWithTag("coreSignIn").assertIsNotEnabled()
         compose.onNodeWithTag("validQr").assertDoesNotExist()
         compose.onNodeWithTag("useSampleEvidence").assertDoesNotExist()

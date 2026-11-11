@@ -44,6 +44,7 @@ class RemainingRoleFlowTest {
             value(conductor.auth.signIn("uc-$suffix", "Integration2026!"))
             value(conductor.trip.activate(assignment.id, driver.credential!!))
         }
+        await("welcomeLogin"); click("welcomeLogin")
         await("coreSignIn")
         compose.onNodeWithTag("coreLoginId").performTextInput("sup-001")
         compose.onNodeWithTag("corePassword").performTextInput("Safebus2024!")
@@ -73,7 +74,8 @@ class RemainingRoleFlowTest {
         click("revoke:${source.id}"); click("confirmSource", false)
         compose.waitUntil(20000) { compose.onAllNodesWithTag("revoke:${source.id}").fetchSemanticsNodes().isEmpty() }
         runBlocking { assertEquals("REVOKED", value(sources.sources(bus.id)).single().status) }
-        click("nav:ACCOUNT", false); click("realSignOut"); click("confirmRealSignOut", false); await("coreSignIn")
+        click("nav:ACCOUNT", false); click("realSignOut"); click("confirmRealSignOut", false); await("welcomeLogin")
         runBlocking { value(conductor.trip.close(shift)); value(conductor.auth.signOut()); value(supervisor.auth.signOut()) }
     }
 }
+

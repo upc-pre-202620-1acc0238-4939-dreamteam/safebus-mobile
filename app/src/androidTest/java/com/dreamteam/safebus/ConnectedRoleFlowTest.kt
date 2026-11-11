@@ -26,6 +26,8 @@ class ConnectedRoleFlowTest {
         node.performClick()
     }
     private fun login(id: String, password: String) {
+        compose.waitUntil(15000) { compose.onAllNodesWithTag("coreSignIn").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("welcomeLogin").fetchSemanticsNodes().isNotEmpty() }
+        if (compose.onAllNodesWithTag("welcomeLogin").fetchSemanticsNodes().isNotEmpty()) click("welcomeLogin", true)
         await("coreSignIn")
         compose.onNodeWithTag("coreLoginId").performTextClearance()
         compose.onNodeWithTag("coreLoginId").performTextInput(id)
@@ -33,7 +35,7 @@ class ConnectedRoleFlowTest {
         click("coreSignIn", true)
         await("nav:ACCOUNT")
     }
-    private fun logout() { click("nav:ACCOUNT"); click("realSignOut", true); click("confirmRealSignOut"); await("coreSignIn") }
+    private fun logout() { click("nav:ACCOUNT"); click("realSignOut", true); click("confirmRealSignOut"); await("welcomeLogin") }
     private fun <T> value(result: DomainResult<T>): T = when (result) {
         is DomainResult.Success -> result.value
         is DomainResult.Error -> throw AssertionError("Backend failure: ${result.failure.kind}/${result.failure.code}")
