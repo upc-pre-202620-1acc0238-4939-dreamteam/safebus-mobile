@@ -5,6 +5,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FailureTextTest {
+    @Test fun assignmentFailuresExplainResourceAndScheduleProblems() {
+        val codes = listOf("ASSIGNMENT_OVERLAP", "RESOURCE_NOT_IN_COMPANY", "RESOURCE_DISABLED", "INVALID_PERIOD")
+        val messages = codes.map { failureText(Failure.fromStatus(422, it)) }
+        assertEquals(4, messages.distinct().size)
+        assertTrue(messages.none { it == failureText(Failure.fromStatus(422)) })
+    }
     @Test fun everyFailureHasAnIsolatedUserMessage() {
         val messages = FailureKind.entries.map { failureText(Failure(it)) }
         assertEquals(FailureKind.entries.size, messages.distinct().size)

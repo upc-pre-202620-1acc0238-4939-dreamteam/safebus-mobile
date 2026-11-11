@@ -44,4 +44,13 @@
     <string name="ui_slogan">Safer journeys, faster response.</string>
     <string name="ui_review_group">Review group</string>
     <string name="ui_status_assigned">Assigned</string>
+    <string name="provision_saved_title">Saved successfully</string>
+    <string name="provision_failed_title">Unable to confirm the save</string>
+    <string name="provision_saving_title">Saving to server</string>
+    <string name="provision_acknowledge">Understood</string>
+    <string name="provision_overlap">The driver or bus already has an assignment overlapping this period. Check the existing assignment or choose another time.</string>
+    <string name="provision_resource_company">One of the driver, bus or route identifiers does not belong to your company. Use the identifiers returned by this server when creating those resources.</string>
+    <string name="provision_resource_disabled">The driver, bus or route is disabled. Select enabled resources.</string>
+    <string name="provision_invalid_period">The end of the assignment must be after its start.</string>
+    <string name="provision_save_not_started">The save could not start. Wait for the current refresh to finish, then try again.</string>
 </resources>

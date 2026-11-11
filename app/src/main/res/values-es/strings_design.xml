@@ -45,4 +45,13 @@
     <string name="ui_slogan">Viajes más seguros, respuesta más rápida.</string>
     <string name="ui_review_group">Revisar grupo</string>
     <string name="ui_status_assigned">Asignado</string>
+    <string name="provision_saved_title">Guardado correctamente</string>
+    <string name="provision_failed_title">No se pudo confirmar el guardado</string>
+    <string name="provision_saving_title">Guardando en el servidor</string>
+    <string name="provision_acknowledge">Entendido</string>
+    <string name="provision_overlap">El conductor o el bus ya tiene una asignación que se cruza con este horario. Revise la asignación existente o elija otro horario.</string>
+    <string name="provision_resource_company">Alguno de los identificadores del conductor, bus o ruta no pertenece a su empresa. Use los identificadores que devolvió este servidor al registrar esos recursos.</string>
+    <string name="provision_resource_disabled">El conductor, bus o ruta está deshabilitado. Seleccione recursos habilitados.</string>
+    <string name="provision_invalid_period">El fin de la asignación debe ser posterior al inicio.</string>
+    <string name="provision_save_not_started">No se pudo iniciar el guardado. Espere a que termine la actualización en curso y vuelva a intentarlo.</string>
 </resources>

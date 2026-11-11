@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -119,6 +120,15 @@ enum class ProvisionForm(val title: Int) {
     var fields by remember(form) { mutableStateOf<Map<String, String>>(emptyMap()) }
     var step by remember(form) { mutableIntStateOf(0) }
     var invalid by remember(form) { mutableStateOf(false) }
+    var submitting by remember(form) { mutableStateOf(false) }
+    var saved by remember(form) { mutableStateOf(false) }
+    var outcome by remember(form) { mutableStateOf<DomainResult<ProvisionReceipt>?>(null) }
+    LaunchedEffect(submitting, state.value.saveResult, state.busy, state.failure) {
+        if (submitting && outcome == null) {
+            outcome = state.value.saveResult ?: if (!state.busy) DomainResult.Error(state.failure ?: Failure(FailureKind.CONFLICT, "SAVE_NOT_STARTED")) else null
+            if (outcome is DomainResult.Success) saved = true
+        }
+    }
     val zone = ZoneId.systemDefault()
     CorePage(R.string.core_assignments, state.busy, state.failure) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
@@ -143,7 +153,7 @@ enum class ProvisionForm(val title: Int) {
             else -> emptyList()
         }
         CoreCard(stringResource(if (form == ProvisionForm.ASSIGNMENT && step == 4) R.string.ui_assignment_review else form.title)) {
-            visible.forEach { (key, label) -> CoreField(label, fields[key].orEmpty(), { fields = fields + (key to it); invalid = false }, "provision:$key", password = key == "password", enabled = !state.busy) }
+            visible.forEach { (key, label) -> CoreField(label, fields[key].orEmpty(), { fields = fields + (key to it); invalid = false; saved = false }, "provision:$key", password = key == "password", enabled = !state.busy) }
             if (form == ProvisionForm.ASSIGNMENT && step == 4) labels.forEach { (key, label) ->
                 Text(stringResource(label), style = MaterialTheme.typography.labelLarge)
                 Text(fields[key].orEmpty())
@@ -157,7 +167,7 @@ enum class ProvisionForm(val title: Int) {
                 }.getOrDefault(false).not()
                 if (!invalid) step++
             }
-        } else CoreButton(R.string.core_save, "saveProvision", !state.busy) {
+        } else CoreButton(R.string.core_save, "saveProvision", !state.busy && !submitting && !saved) {
             fun value(key: String) = fields[key].orEmpty()
             val change = runCatching { when (form) {
                 ProvisionForm.BUS -> FleetChange.Bus(value("plate"))
@@ -168,7 +178,9 @@ enum class ProvisionForm(val title: Int) {
                 ProvisionForm.CAPACITY -> FleetChange.Capacity(value("bus").toLong(), value("capacity").toInt(), value("reference"))
             } }.getOrNull()
             invalid = change == null || !change.valid()
-            if (change != null && !invalid) { clear(); save(change); fields = fields - "password" }
+            if (change != null && !invalid) {
+                clear(); outcome = null; submitting = true; save(change); fields = fields - "password"
+            }
         }
         if (form == ProvisionForm.ASSIGNMENT && step > 0) CoreButton(R.string.core_back, "assignmentBack", !state.busy, secondary = true) { step--; invalid = false }
         state.value.receipt?.let { receipt -> CoreCard(stringResource(R.string.core_saved_id, receipt.id)) {
@@ -179,4 +191,33 @@ enum class ProvisionForm(val title: Int) {
             receipt.expiresAt?.let { TimeLabel(it) }
         } }
     }
+    if (submitting) {
+        val result = outcome
+        val finished = result != null
+        val dismiss = { if (finished) { submitting = false; outcome = null } }
+        AlertDialog(onDismissRequest = dismiss, modifier = Modifier.testTag("provisionFeedback"),
+            title = { Text(stringResource(when (result) {
+                is DomainResult.Success -> R.string.provision_saved_title
+                is DomainResult.Error -> R.string.provision_failed_title
+                null -> R.string.provision_saving_title
+            })) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+                    when (result) {
+                        null -> { LinearProgressIndicator(Modifier.fillMaxWidth()); Text(stringResource(R.string.core_loading)) }
+                        is DomainResult.Error -> Text(stringResource(failureText(result.failure)), Modifier.testTag("provisionSaveError"))
+                        is DomainResult.Success -> {
+                            Text(stringResource(R.string.core_saved_id, result.value.id), Modifier.testTag("provisionSavedId"))
+                            result.value.credential?.let { credential ->
+                                Text(stringResource(R.string.core_credential))
+                                SelectionContainer { Text(if (form == ProvisionForm.BUS) BusQr(credential, result.value.id).encoded() else credential) }
+                            }
+                            result.value.expiresAt?.let { TimeLabel(it) }
+                        }
+                    }
+                }
+            },
+            confirmButton = { if (finished) TextButton(dismiss, Modifier.testTag("acknowledgeProvision")) { Text(stringResource(R.string.provision_acknowledge)) } })
+    }
+
 }
