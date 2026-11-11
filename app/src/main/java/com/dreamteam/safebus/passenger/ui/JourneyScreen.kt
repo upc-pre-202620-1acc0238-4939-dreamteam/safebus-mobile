@@ -19,20 +19,22 @@ import com.dreamteam.safebus.trip.ui.TrackingPanel
         if (journey == null) {
             state.value.ended?.let { Text(stringResource(R.string.core_journey_ended)); DeliveryNotice(it) }
             if (tracking.status == TrackingStatus.AUTO_ENDED) Text(stringResource(R.string.core_tracking_ended))
-            Text(stringResource(R.string.core_journey_intro))
+            CoreEmpty(R.string.core_journey_intro, R.drawable.ic_qr_code_scanner)
             QrInput(qr, { qr = it }, !state.busy)
             CoreButton(R.string.core_start_journey, "startRealJourney", !state.busy && qr.isNotBlank()) { start(qr); qr = "" }
         } else {
-            CoreCard(stringResource(R.string.core_journey_active)) {
+            CoreCard(stringResource(R.string.ui_unit_in_service)) {
+                CoreIcon(R.drawable.ic_directions_bus)
                 Text(journey.plate, Modifier.testTag("verifiedBus"), style = MaterialTheme.typography.headlineMedium)
-                Text(journey.company); StateLabel(journey.validation)
+                StateLabel("ACTIVE"); StateLabel(journey.validation)
+                Text(journey.company, style = MaterialTheme.typography.titleMedium)
                 Text(journey.route); Text(stringResource(R.string.core_route, journey.origin, journey.destination))
                 Text(stringResource(R.string.core_driver_name, journey.driver)); TimeLabel(journey.startedAt)
             }
             if (journey.busId == null) Text(stringResource(R.string.core_bus_id_missing))
             TrackingPanel(tracking, permission)
-            CoreButton(R.string.core_request_new, "newRealRequest", !state.busy, action = request)
-            CoreButton(R.string.core_end_journey, "endRealJourney", !state.busy) { confirmation = true }
+            CoreButton(R.string.core_request_new, "newRealRequest", !state.busy, icon = R.drawable.ic_shield, action = request)
+            CoreButton(R.string.core_end_journey, "endRealJourney", !state.busy, secondary = true) { confirmation = true }
         }
     }
     if (confirmation) AlertDialog(onDismissRequest = { confirmation = false }, title = { Text(stringResource(R.string.core_end_journey)) },

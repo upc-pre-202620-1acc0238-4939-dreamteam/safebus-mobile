@@ -36,11 +36,14 @@ import kotlinx.coroutines.*
             loading = false
         }
     }
-    CoreButton(R.string.core_photo_choose, "choosePhoto", enabled && !loading) {
+    CoreButton(R.string.core_photo_choose, "choosePhoto", enabled && !loading, secondary = true, icon = R.drawable.ic_photo_camera) {
         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
     Text(stringResource(R.string.core_photo_hint))
-    if (photo != null) Text(stringResource(R.string.core_photo_selected), Modifier.testTag("photoSelected"))
+    if (photo != null) {
+        PrivatePhoto(photo)
+        CoreNotice(stringResource(R.string.core_photo_selected), R.drawable.ic_check_circle, Modifier.testTag("photoSelected"))
+    }
     if (invalid) Text(stringResource(R.string.core_photo_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("photoError"))
     if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
 }
@@ -62,7 +65,7 @@ import kotlinx.coroutines.*
     }
     CoreField(R.string.core_qr_content, value, onChange, "qrContent", enabled = enabled)
     Text(stringResource(R.string.core_qr_hint))
-    CoreButton(R.string.core_qr_scan, "openScanner", enabled) {
+    CoreButton(R.string.core_qr_scan, "openScanner", enabled, secondary = true, icon = R.drawable.ic_qr_code_scanner) {
         try { scanner.launch(Intent("com.google.zxing.client.android.SCAN").putExtra("SCAN_MODE", "QR_CODE_MODE")) }
         catch (_: ActivityNotFoundException) { scannerMissing = true }
     }
