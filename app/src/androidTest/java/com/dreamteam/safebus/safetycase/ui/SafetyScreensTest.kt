@@ -56,6 +56,8 @@ class SafetyScreensTest {
         var declined: String? = null
         val queue = ReviewQueue(emptyList(), listOf(ReviewGroup(1, "G1", 1, 3, emptyList())), Instant.EPOCH)
         compose.setContent { CoreTheme { SafetyListScreen(ScreenState(SafetyState(queue = queue)), SafetyTab.REVIEWS, {}, {}, {}, decline = { _, reason, _ -> declined = reason }) } }
+        compose.onNodeWithTag("decline:1").assertDoesNotExist()
+        compose.onNodeWithTag("reviewGroup:1").performScrollTo().performClick()
         compose.onNodeWithTag("decline:1").performScrollTo().performClick()
         compose.onNodeWithTag("confirmDecision").assertIsNotEnabled()
         assertNull(declined)

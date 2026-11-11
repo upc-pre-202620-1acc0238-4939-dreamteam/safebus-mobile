@@ -81,6 +81,34 @@ class ReportLayoutsTest {
         assertEquals(0, writes)
         capture("request")
     }
+    @Test fun emergenciesPrioritizeDriversAndOpenAnIndependentDetail() {
+        val critical = Emergency("00000000-0000-0000-0000-000000000001", "ACTIVE", "CRITICAL", 1, Instant.EPOCH)
+        val high = critical.copy(id = "00000000-0000-0000-0000-000000000002", priority = "HIGH")
+        val state = ScreenState(SafetyState(queue = ReviewQueue(listOf(high, critical), emptyList(), Instant.EPOCH)))
+        var attended: String? = null
+        show { SafetyListScreen(state, SafetyTab.EMERGENCIES, {}, {}, {}, attend = { attended = it }) }
+        assertTrue(compose.onNodeWithText("Critical · Driver").fetchSemanticsNode().positionInRoot.y <
+            compose.onNodeWithText("High · Passengers").fetchSemanticsNode().positionInRoot.y)
+        capture("emergencies")
+        compose.onNodeWithTag("emergencyDetail:${critical.id}").performScrollTo().performClick()
+        compose.onNodeWithText("High · Passengers").assertDoesNotExist()
+        compose.onNodeWithTag("attend:${critical.id}").performScrollTo().performClick()
+        assertNull(attended)
+        compose.onNodeWithTag("confirmDecision").performClick()
+        assertEquals(critical.id, attended)
+    }
+    @Test fun groupReviewShowsPrivateContributionsBeforeDecision() {
+        val request = PassengerRequest("00000000-0000-0000-0000-000000000001", "Incident near the rear door", "AWAITING_APPROVAL", Instant.EPOCH, 3, "G-001", null, null)
+        val group = ReviewGroup(1, "G-001", 1, 3, listOf(request))
+        show { SafetyListScreen(ScreenState(SafetyState(queue = ReviewQueue(emptyList(), listOf(group), Instant.EPOCH))), SafetyTab.REVIEWS, {}, {}, {}) }
+        compose.onNodeWithTag("approve:1").assertDoesNotExist()
+        compose.onNodeWithTag("reviewGroup:1").performScrollTo().performClick()
+        compose.onNodeWithText(request.message).assertExists()
+        compose.onNodeWithTag("evidence:${request.id}").assertExists()
+        capture("group-review")
+        compose.onNodeWithTag("pageBack").performClick()
+        compose.onNodeWithTag("approve:1").assertDoesNotExist()
+    }
     @Test fun largeTextKeepsLoginActionsReachable() {
         var login: String? = null
         show {

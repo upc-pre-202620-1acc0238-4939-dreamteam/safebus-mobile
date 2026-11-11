@@ -52,6 +52,7 @@ class ConnectedRoleFlowTest {
         val route = runBlocking { value(supervisor.fleet.save(FleetChange.Route("UI route", "A", "B"))) }
         runBlocking { value(supervisor.fleet.save(FleetChange.Assignment(driver.id, bus.id, route.id, Instant.now().minusSeconds(60), Instant.now().plusSeconds(3600)))) }
         login("ui-$suffix", "Integration2026!")
+        click("openShiftScan", true)
         await("qrContent")
         compose.onNodeWithTag("nav:FLEET").assertDoesNotExist()
         compose.onNodeWithTag("qrContent").performTextInput("invalid")
@@ -75,6 +76,7 @@ class ConnectedRoleFlowTest {
         compose.onNodeWithTag("nav:SHIFT").assertDoesNotExist()
         compose.onNodeWithTag("realPanic").assertDoesNotExist()
         click("nav:EMERGENCIES")
+        click("emergencyDetail:${emergency.id}", true)
         click("attend:${emergency.id}", true)
         click("confirmDecision")
         click("close:${emergency.id}", true)

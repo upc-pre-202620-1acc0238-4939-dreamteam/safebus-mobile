@@ -1,5 +1,6 @@
 package com.dreamteam.safebus.safetycase.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
     var reviewing by remember { mutableStateOf(false) }
     LaunchedEffect(state.value.receipt) { if (state.value.receipt != null) { message = ""; photo = null; reviewing = false } }
     val returnToForm = { reviewing = false }
+    BackHandler(reviewing && !state.busy, returnToForm)
     CorePage(if (reviewing) R.string.ui_review_request else R.string.core_request_new, state.busy, state.failure,
         back = { if (reviewing) returnToForm() else back() }) {
         CoreNotice(stringResource(R.string.ui_request_notice), icon = R.drawable.ic_shield)
@@ -65,6 +67,9 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
 @Composable fun SafetyListScreen(state: ScreenState<SafetyState>, tab: SafetyTab, refresh: () -> Unit,
     evidence: (String) -> Unit, clearEvidence: () -> Unit, approve: (Long) -> Unit = {}, decline: (Long, String, String) -> Unit = { _, _, _ -> },
     attend: (String) -> Unit = {}, close: (String, String, String) -> Unit = { _, _, _ -> }, detail: ((String) -> Unit)? = null) {
+    var selectedGroup by remember(tab) { mutableStateOf<Long?>(null) }
+    var selectedAlert by remember(tab) { mutableStateOf<String?>(null) }
+    BackHandler(selectedGroup != null || selectedAlert != null) { selectedGroup = null; selectedAlert = null }
     var completed by remember(tab) { mutableStateOf(false) }
     var decision by remember(tab) { mutableStateOf<Decision?>(null) }
     val title = when (tab) {
@@ -74,7 +79,8 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
         SafetyTab.EMERGENCIES -> R.string.core_emergencies
         SafetyTab.REVIEWS -> R.string.core_reviews
     }
-    CorePage(title, state.busy, state.failure, refresh) {
+    CorePage(if (selectedGroup != null) R.string.ui_review_group else if (selectedAlert != null) R.string.core_emergency else title, state.busy, state.failure, refresh,
+        back = if (selectedGroup != null || selectedAlert != null) ({ selectedGroup = null; selectedAlert = null }) else null) {
         if (state.value.decisionSaved) CoreNotice(stringResource(R.string.core_decision_saved), icon = R.drawable.ic_check_circle)
         when (tab) {
             SafetyTab.DRIVER_ALERTS, SafetyTab.EMERGENCIES -> {
@@ -82,15 +88,16 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                 val alerts = (if (tab == SafetyTab.DRIVER_ALERTS) state.value.driverAlerts.filter { (it.status == "CLOSED") == completed }
                     else state.value.queue?.emergencies.orEmpty()).sortedBy { if (it.priority == "CRITICAL") 0 else 1 }
                 if (alerts.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_emergencies, icon = R.drawable.ic_shield)
-                alerts.forEachIndexed { index, alert ->
-                    if (tab == SafetyTab.EMERGENCIES && (index == 0 || alerts[index - 1].priority != alert.priority))
+                alerts.filter { selectedAlert == null || it.id == selectedAlert }.forEachIndexed { index, alert ->
+                    if (tab == SafetyTab.EMERGENCIES && selectedAlert == null && (index == 0 || alerts[index - 1].priority != alert.priority))
                         Text(stringResource(if (alert.priority == "CRITICAL") R.string.ui_driver_emergencies else R.string.ui_passenger_emergencies), style = MaterialTheme.typography.titleLarge)
                     CoreCard(accent = colorResource(stateColorResource(alert.priority))) {
                     StateLabel(alert.priority); StateLabel(alert.status); TimeLabel(alert.activatedAt)
                     Text(stringResource(R.string.core_case_reference, alert.id), style = MaterialTheme.typography.bodySmall)
                     alert.busId?.let { Text(stringResource(R.string.core_bus_reference, it)) }
                     alert.response?.let { Text(it) }
-                    if (tab == SafetyTab.EMERGENCIES) {
+                    if (tab == SafetyTab.EMERGENCIES && selectedAlert == null) CoreButton(R.string.ui_view_details, "emergencyDetail:${alert.id}", secondary = true) { selectedAlert = alert.id }
+                    if (tab == SafetyTab.EMERGENCIES && selectedAlert == alert.id) {
                         if (alert.status == "ACTIVE") CoreButton(R.string.core_attend, "attend:${alert.id}", !state.busy) {
                             decision = Decision(R.string.core_attend, alert.id, false) { _, _ -> attend(alert.id) }
                         }
@@ -125,9 +132,11 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
             SafetyTab.REVIEWS -> {
                 val groups = state.value.queue?.groups.orEmpty()
                 if (groups.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_reviews, icon = R.drawable.ic_fact_check)
-                groups.forEach { group -> CoreCard(group.reference, accent = colorResource(R.color.core_pending)) {
+                groups.filter { selectedGroup == null || it.id == selectedGroup }.forEach { group -> CoreCard(group.reference, accent = colorResource(R.color.core_pending)) {
                     StateLabel("AWAITING_APPROVAL")
                     Text(stringResource(R.string.core_bus_reference, group.busId)); ContributionProgress(group.contributors)
+                    if (selectedGroup == null) CoreButton(R.string.ui_review_group, "reviewGroup:${group.id}") { selectedGroup = group.id }
+                    if (selectedGroup == group.id) {
                     group.requests.forEach { request ->
                         HorizontalDivider()
                         Text(request.message); TimeLabel(request.submittedAt)
@@ -138,6 +147,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                     }
                     CoreButton(R.string.core_decline, "decline:${group.id}", !state.busy, secondary = true) {
                         decision = Decision(R.string.core_decline, group.reference, true) { reason, response -> decline(group.id, reason, response) }
+                    }
                     }
                 } }
             }

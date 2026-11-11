@@ -166,7 +166,8 @@ fun stateColorResource(value: String): Int = when (value) {
 }
 @Composable fun StateLabel(value: String) {
     val label = when (value) {
-        "ACTIVE", "ASSIGNED" -> R.string.core_status_active
+        "ACTIVE" -> R.string.core_status_active
+        "ASSIGNED" -> R.string.ui_status_assigned
         "VERIFIED", "VALIDATED" -> R.string.core_company_verified
         "NOT_VALIDATED" -> R.string.core_company_not_verified
         "IN_PROGRESS" -> R.string.core_status_attention

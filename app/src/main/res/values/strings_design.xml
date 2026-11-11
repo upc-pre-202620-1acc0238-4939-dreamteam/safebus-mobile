@@ -42,4 +42,6 @@
     <string name="ui_incident_photo">Incident photo</string>
     <string name="ui_account_help">Manage your language and pending deliveries.</string>
     <string name="ui_slogan">Safer journeys, faster response.</string>
+    <string name="ui_review_group">Review group</string>
+    <string name="ui_status_assigned">Assigned</string>
 </resources>

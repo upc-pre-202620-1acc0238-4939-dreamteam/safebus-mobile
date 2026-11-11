@@ -17,6 +17,9 @@ class TripScreenTest {
         val assignment = Assignment(1, "ASSIGNED", "BUS-123", "Route 1", "Origin", "Destination", Instant.EPOCH, Instant.EPOCH.plusSeconds(60))
         compose.setContent { CoreTheme { TripScreen(ScreenState(TripState(assignment = assignment)), TrackingState(), {}, { activated = it }, {}, {}) } }
         compose.onNodeWithText("BUS-123").assertExists()
+        compose.onNodeWithText("Assigned").assertExists()
+        compose.onNodeWithTag("activateShift").assertDoesNotExist()
+        compose.onNodeWithTag("openShiftScan").performScrollTo().performClick()
         compose.onNodeWithTag("activateShift").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithTag("qrContent").performScrollTo().performTextInput("credential")
         compose.onNodeWithTag("activateShift").performScrollTo().performClick()

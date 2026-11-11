@@ -43,4 +43,6 @@
     <string name="ui_incident_photo">Foto del incidente</string>
     <string name="ui_account_help">Gestione su idioma y los envíos pendientes.</string>
     <string name="ui_slogan">Viajes más seguros, respuesta más rápida.</string>
+    <string name="ui_review_group">Revisar grupo</string>
+    <string name="ui_status_assigned">Asignado</string>
 </resources>

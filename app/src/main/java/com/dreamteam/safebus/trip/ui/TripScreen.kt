@@ -1,5 +1,6 @@
 package com.dreamteam.safebus.trip.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,9 +12,12 @@ import com.dreamteam.safebus.shared.ui.*
 
 @Composable fun TripScreen(state: ScreenState<TripState>, tracking: TrackingState, refresh: () -> Unit,
     activate: (String) -> Unit, close: () -> Unit, permission: () -> Unit) {
+    var scanning by remember { mutableStateOf(false) }
+    BackHandler(scanning) { scanning = false }
+    LaunchedEffect(state.value.shift) { if (state.value.shift != null) scanning = false }
     var qr by remember { mutableStateOf("") }
     var confirmation by remember { mutableStateOf(false) }
-    CorePage(R.string.core_shift, state.busy, state.failure, refresh) {
+    CorePage(if (scanning) R.string.core_qr_scan else R.string.core_shift, state.busy, state.failure, refresh, back = if (scanning) ({ scanning = false }) else null) {
         state.value.assignment?.let { assignment ->
             CoreCard(stringResource(R.string.ui_assigned_unit)) {
                 CoreIcon(R.drawable.ic_directions_bus)
@@ -33,8 +37,10 @@ import com.dreamteam.safebus.shared.ui.*
         } else if (state.value.assignment?.status == "ACTIVE") {
             CoreNotice(stringResource(R.string.core_restore_shift_missing), modifier = Modifier.testTag("shiftRecoveryUnavailable"))
         } else if (state.value.assignment != null) {
+            if (scanning) {
             QrInput(qr, { qr = it }, !state.busy)
             CoreButton(R.string.core_activate_shift, "activateShift", !state.busy && qr.isNotBlank()) { activate(qr); qr = "" }
+            } else CoreButton(R.string.core_qr_scan, "openShiftScan", !state.busy, icon = R.drawable.ic_qr_code_scanner) { scanning = true }
         } else if (state.value.loaded) CoreEmpty(R.string.core_no_assignment, icon = R.drawable.ic_assignment, modifier = Modifier.testTag("noAssignment"))
     }
     if (confirmation) AlertDialog(onDismissRequest = { confirmation = false }, title = { Text(stringResource(R.string.core_close_shift)) },
