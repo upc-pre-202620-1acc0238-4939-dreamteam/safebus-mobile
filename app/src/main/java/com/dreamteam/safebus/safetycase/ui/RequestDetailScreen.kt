@@ -20,6 +20,6 @@ import com.dreamteam.safebus.shared.ui.*
             request.groupReference?.let { Text(it) }; request.decision?.let { StateLabel(it) }
             request.decidedAt?.let { TimeLabel(it) }; request.response?.let { Text(it) }
         } }
-        CoreNotice(stringResource(R.string.ui_private_evidence), R.drawable.ic_lock)
+        CoreNotice(stringResource(R.string.ui_private_evidence), icon = R.drawable.ic_lock)
     }
 }

@@ -72,7 +72,7 @@ private enum class AccessPage { WELCOME, LOGIN, REGISTER }
                     signIn(login, password); password = ""
                 }
                 CoreButton(R.string.core_register, "openRegistration", !state.busy, secondary = true) { registration() }
-                CoreNotice(stringResource(R.string.company_access), R.drawable.ic_shield)
+                CoreNotice(stringResource(R.string.company_access), icon = R.drawable.ic_shield)
                 TextButton(connection, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text(stringResource(R.string.core_server_settings)) }
             } else {
                 StepIndicator(step, 3)
@@ -83,15 +83,15 @@ private enum class AccessPage { WELCOME, LOGIN, REGISTER }
                         CoreButton(R.string.ui_continue, "registrationNext", login.matches(Regex("[0-9]{8}"))) { step = 1 }
                     }
                     1 -> {
-                        CoreNotice(stringResource(R.string.ui_registration_photo), R.drawable.ic_shield)
-                        CoreCard { if (photo == null) CoreEmpty(R.string.core_face_photo, R.drawable.ic_account_circle) else PrivatePhoto(photo!!) }
+                        CoreNotice(stringResource(R.string.ui_registration_photo), icon = R.drawable.ic_shield)
+                        CoreCard { if (photo == null) CoreEmpty(R.string.core_face_photo, icon = R.drawable.ic_account_circle) else PrivatePhoto(photo!!) }
                         PhotoChooser(photo, { photo = it }, !state.busy)
                         CoreButton(R.string.ui_continue, "registrationNext", photo != null) { step = 2 }
                     }
                     else -> {
                         CoreField(R.string.core_password, password, { password = it }, "corePassword", password = true, enabled = !state.busy)
                         Text(stringResource(R.string.core_password_rule))
-                        CoreNotice(stringResource(R.string.core_registration_privacy), R.drawable.ic_lock)
+                        CoreNotice(stringResource(R.string.core_registration_privacy), icon = R.drawable.ic_lock)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(consent, { consent = it }, enabled = !state.busy, modifier = Modifier.testTag("acceptTerms"))
                             Text(stringResource(R.string.core_terms), Modifier.weight(1f))

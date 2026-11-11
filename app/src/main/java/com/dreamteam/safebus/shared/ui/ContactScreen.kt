@@ -18,10 +18,10 @@ import java.util.UUID
     var email by remember(pending) { mutableStateOf(pending?.email.orEmpty()) }
     var consent by remember(pending) { mutableStateOf(pending?.consent ?: false) }
     val id = remember(pending, receipt) { pending?.id ?: UUID.randomUUID().toString() }
-    CorePage(R.string.extra_contact, state.busy, state.failure) {
-        CoreButton(R.string.core_back, "contactBack", action = back)
-        Text(stringResource(R.string.extra_contact_help))
-        CoreButton(R.string.extra_health, "checkService", !state.busy, action = health)
+    CorePage(R.string.extra_contact, state.busy, state.failure, back = back) {
+        CoreButton(R.string.core_back, "contactBack", secondary = true, action = back)
+        CoreNotice(stringResource(R.string.extra_contact_help), icon = R.drawable.ic_phone)
+        CoreButton(R.string.extra_health, "checkService", !state.busy, secondary = true, action = health)
         if (state.value.available) Text(stringResource(R.string.extra_health_up), Modifier.testTag("serviceAvailable"))
         if (receipt != null) {
             Text(stringResource(R.string.extra_contact_receipt, receipt.reference), Modifier.testTag("contactReceipt"))

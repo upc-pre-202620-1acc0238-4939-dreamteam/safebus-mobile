@@ -19,7 +19,6 @@
     <string name="ui_no_reviews">No hay grupos pendientes de aprobación.</string>
     <string name="ui_driver_emergencies">Emergencias de conductores</string>
     <string name="ui_passenger_emergencies">Emergencias de pasajeros</string>
-    <string name="ui_review_groups">Revisiones de pasajeros</string>
     <string name="ui_request_notice">Esta es una solicitud, aún no es una emergencia.</string>
     <string name="ui_private_evidence">Solo usted y su empresa pueden ver esta evidencia.</string>
     <string name="ui_active_cases">En curso</string>
@@ -32,16 +31,16 @@
     <string name="ui_unavailable">No disponible</string>
     <string name="ui_over_capacity">Sobre la capacidad</string>
     <string name="ui_fleet_search">Buscar por placa, ruta o conductor</string>
-    <string name="ui_occupancy_ratio">%1$d de %2$d pasajeros</string>
+    <plurals name="ui_occupancy_ratio">
+        <item quantity="one">%1$d de %2$d pasajero</item>
+        <item quantity="many">%1$d de %2$d pasajeros</item>
+        <item quantity="other">%1$d de %2$d pasajeros</item>
+    </plurals>
     <string name="ui_bus_details">Detalle del bus</string>
     <string name="ui_view_details">Ver detalle</string>
-    <string name="ui_map_help">Seleccione un bus con ubicación registrada para abrir su mapa.</string>
     <string name="ui_map_fallback">El mapa integrado no está disponible. Puede consultar las ubicaciones registradas en la lista y en su aplicación de mapas.</string>
     <string name="ui_assignment_review">Revisar asignación</string>
-    <string name="ui_assignment_details">Datos de la asignación</string>
     <string name="ui_incident_photo">Foto del incidente</string>
-    <string name="ui_company">Empresa concesionaria</string>
-    <string name="ui_route_label">Ruta</string>
     <string name="ui_account_help">Gestione su idioma y los envíos pendientes.</string>
     <string name="ui_slogan">Viajes más seguros, respuesta más rápida.</string>
 </resources>

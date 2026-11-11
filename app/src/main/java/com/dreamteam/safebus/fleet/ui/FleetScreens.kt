@@ -30,7 +30,7 @@ import java.time.ZoneId
     var search by remember { mutableStateOf("") }
     var mapMissing by remember { mutableStateOf(false) }
     var map by remember { mutableStateOf(false) }
-    var filter by remember { mutableStateOf(R.string.ui_all) }
+    var filter by remember { mutableIntStateOf(R.string.ui_all) }
     var selected by remember { mutableStateOf<Long?>(null) }
     CorePage(R.string.core_fleet, state.busy, state.failure, refresh) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
@@ -46,7 +46,7 @@ import java.time.ZoneId
                     Modifier.heightIn(min = dimensionResource(R.dimen.core_secondary_height)).testTag("fleetFilter:$option"))
             }
         }
-        if (map) CoreNotice(stringResource(R.string.ui_map_fallback), R.drawable.ic_map, Modifier.testTag("fleetMapFallback"))
+        if (map) CoreNotice(stringResource(R.string.ui_map_fallback), icon = R.drawable.ic_map, modifier = Modifier.testTag("fleetMapFallback"))
         if (mapMissing) CoreNotice(stringResource(R.string.core_map_unavailable), modifier = Modifier.testTag("mapUnavailable"))
         state.value.overview?.let { overview ->
             TimeLabel(overview.updatedAt)
@@ -59,7 +59,7 @@ import java.time.ZoneId
                     else -> true
                 }
             }
-            if (buses.isEmpty()) CoreEmpty(R.string.core_empty, R.drawable.ic_directions_bus)
+            if (buses.isEmpty()) CoreEmpty(R.string.core_empty, icon = R.drawable.ic_directions_bus)
             buses.forEach { bus -> CoreCard {
                 Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
                     CoreIcon(R.drawable.ic_directions_bus)
@@ -70,11 +70,11 @@ import java.time.ZoneId
                 StateLabel(bus.locationStatus)
                 bus.position?.let { TimeLabel(it.capturedAt) }
                 if (bus.count != null && bus.capacity != null) {
-                    Text(stringResource(R.string.ui_occupancy_ratio, bus.count, bus.capacity))
-                    LinearProgressIndicator(progress = { (bus.count.toFloat() / bus.capacity).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(),
+                    Text(pluralStringResource(R.plurals.ui_occupancy_ratio, bus.capacity, bus.count, bus.capacity))
+                    LinearProgressIndicator(progress = { (bus.count.toFloat() / bus.capacity).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(), trackColor = MaterialTheme.colorScheme.outlineVariant,
                         color = if (bus.load == "OVER_CAPACITY") colorResource(R.color.core_pending) else MaterialTheme.colorScheme.secondary)
                 } else StateLabel(bus.occupancyStatus)
-                if (bus.load == "OVER_CAPACITY") CoreNotice(stringResource(R.string.core_over_capacity), R.drawable.ic_groups)
+                if (bus.load == "OVER_CAPACITY") CoreNotice(stringResource(R.string.core_over_capacity), icon = R.drawable.ic_groups)
                 Text(stringResource(R.string.core_open_cases,
                     pluralStringResource(R.plurals.core_emergency_count, bus.emergencyCount, bus.emergencyCount),
                     pluralStringResource(R.plurals.core_pending_reviews, bus.pendingGroups, bus.pendingGroups)), style = MaterialTheme.typography.bodyMedium)

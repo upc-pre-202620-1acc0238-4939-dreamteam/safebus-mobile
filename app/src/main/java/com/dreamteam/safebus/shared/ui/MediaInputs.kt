@@ -42,7 +42,7 @@ import kotlinx.coroutines.*
     Text(stringResource(R.string.core_photo_hint))
     if (photo != null) {
         PrivatePhoto(photo)
-        CoreNotice(stringResource(R.string.core_photo_selected), R.drawable.ic_check_circle, Modifier.testTag("photoSelected"))
+        CoreNotice(stringResource(R.string.core_photo_selected), icon = R.drawable.ic_check_circle, modifier = Modifier.testTag("photoSelected"))
     }
     if (invalid) Text(stringResource(R.string.core_photo_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("photoError"))
     if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())

@@ -19,7 +19,6 @@
     <string name="ui_no_reviews">No groups awaiting company approval.</string>
     <string name="ui_driver_emergencies">Driver emergencies</string>
     <string name="ui_passenger_emergencies">Passenger emergencies</string>
-    <string name="ui_review_groups">Passenger reviews</string>
     <string name="ui_request_notice">This is a request, not yet an emergency.</string>
     <string name="ui_private_evidence">Only you and your company can see this evidence.</string>
     <string name="ui_active_cases">In progress</string>
@@ -32,16 +31,15 @@
     <string name="ui_unavailable">Unavailable</string>
     <string name="ui_over_capacity">Over capacity</string>
     <string name="ui_fleet_search">Search plate, route or driver</string>
-    <string name="ui_occupancy_ratio">%1$d of %2$d passengers</string>
+    <plurals name="ui_occupancy_ratio">
+        <item quantity="one">%1$d of %2$d passenger</item>
+        <item quantity="other">%1$d of %2$d passengers</item>
+    </plurals>
     <string name="ui_bus_details">Bus details</string>
     <string name="ui_view_details">View details</string>
-    <string name="ui_map_help">Select a bus with a recorded location to open its map.</string>
     <string name="ui_map_fallback">An in-app map is unavailable. Recorded locations remain available in the list and your map application.</string>
     <string name="ui_assignment_review">Review assignment</string>
-    <string name="ui_assignment_details">Assignment details</string>
     <string name="ui_incident_photo">Incident photo</string>
-    <string name="ui_company">Transport company</string>
-    <string name="ui_route_label">Route</string>
     <string name="ui_account_help">Manage your language and pending deliveries.</string>
     <string name="ui_slogan">Safer journeys, faster response.</string>
 </resources>

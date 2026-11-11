@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.*
 import androidx.compose.ui.semantics.*
@@ -63,7 +64,7 @@ import java.time.format.FormatStyle
     }
 }
 
-@Composable fun CoreNotice(text: String, icon: Int = R.drawable.ic_info, modifier: Modifier = Modifier) {
+@Composable fun CoreNotice(text: String, modifier: Modifier = Modifier, icon: Int = R.drawable.ic_info) {
     Surface(modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer, shape = MaterialTheme.shapes.medium) {
         Row(Modifier.padding(dimensionResource(R.dimen.core_space)), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
@@ -72,7 +73,7 @@ import java.time.format.FormatStyle
     }
 }
 
-@Composable fun CoreEmpty(@StringRes message: Int, icon: Int = R.drawable.ic_info, modifier: Modifier = Modifier) {
+@Composable fun CoreEmpty(@StringRes message: Int, modifier: Modifier = Modifier, icon: Int = R.drawable.ic_info) {
     CoreCard {
         Column(modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.core_section)), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_space))) {
@@ -146,13 +147,13 @@ fun failureText(failure: Failure): Int = when (failure.code) {
 }
 
 @Composable fun FailureNotice(failure: Failure) {
-    CoreNotice(stringResource(failureText(failure)), R.drawable.ic_info,
-        Modifier.testTag("coreError").semantics { liveRegion = LiveRegionMode.Polite })
+    CoreNotice(stringResource(failureText(failure)), icon = R.drawable.ic_info,
+        modifier = Modifier.testTag("coreError").semantics { liveRegion = LiveRegionMode.Polite })
 }
 @Composable fun DeliveryNotice(delivery: Delivery) {
     CoreNotice(stringResource(if (delivery == Delivery.PENDING) R.string.core_pending else R.string.core_received),
-        if (delivery == Delivery.PENDING) R.drawable.ic_cloud_off else R.drawable.ic_check_circle,
-        Modifier.testTag("deliveryNotice").semantics { liveRegion = LiveRegionMode.Polite })
+        icon = if (delivery == Delivery.PENDING) R.drawable.ic_cloud_off else R.drawable.ic_check_circle,
+        modifier = Modifier.testTag("deliveryNotice").semantics { liveRegion = LiveRegionMode.Polite })
 }
 fun stateColorResource(value: String): Int = when (value) {
     "CRITICAL" -> R.color.core_emergency
@@ -160,7 +161,7 @@ fun stateColorResource(value: String): Int = when (value) {
     "AWAITING_APPROVAL", "STALE" -> R.color.core_pending
     "CLOSED", "ENDED" -> R.color.core_closed
     "PENDING", "COLLECTING", "COUNTED", "ATTACHED" -> R.color.core_information
-    "ACTIVE", "ASSIGNED", "CURRENT", "VALIDATED", "VERIFIED", "APPROVED" -> R.color.core_secondary
+    "ACTIVE", "ASSIGNED", "CURRENT", "AVAILABLE", "VALIDATED", "VERIFIED", "APPROVED" -> R.color.core_secondary
     else -> R.color.core_inactive
 }
 @Composable fun StateLabel(value: String) {
@@ -178,7 +179,7 @@ fun stateColorResource(value: String): Int = when (value) {
         "EXPIRED" -> R.string.core_status_expired
         "ATTACHED" -> R.string.core_status_attached
         "LATE" -> R.string.core_status_late
-        "CURRENT" -> R.string.core_status_current
+        "CURRENT", "AVAILABLE" -> R.string.core_status_current
         "STALE" -> R.string.core_status_stale
         "CRITICAL" -> R.string.core_status_critical
         "HIGH" -> R.string.core_status_high
@@ -202,6 +203,6 @@ fun stateColorResource(value: String): Int = when (value) {
 @Composable fun TimeLabel(at: Instant) {
     Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_tiny)), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(R.drawable.ic_schedule), null, Modifier.size(dimensionResource(R.dimen.core_chip_icon)))
-        Text(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).format(at), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(LocalConfiguration.current.locales[0]).withZone(ZoneId.systemDefault()).format(at), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

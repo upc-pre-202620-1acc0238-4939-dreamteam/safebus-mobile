@@ -19,7 +19,7 @@ import com.dreamteam.safebus.trip.ui.TrackingPanel
         if (journey == null) {
             state.value.ended?.let { Text(stringResource(R.string.core_journey_ended)); DeliveryNotice(it) }
             if (tracking.status == TrackingStatus.AUTO_ENDED) Text(stringResource(R.string.core_tracking_ended))
-            CoreEmpty(R.string.core_journey_intro, R.drawable.ic_qr_code_scanner)
+            CoreEmpty(R.string.core_journey_intro, icon = R.drawable.ic_qr_code_scanner)
             QrInput(qr, { qr = it }, !state.busy)
             CoreButton(R.string.core_start_journey, "startRealJourney", !state.busy && qr.isNotBlank()) { start(qr); qr = "" }
         } else {

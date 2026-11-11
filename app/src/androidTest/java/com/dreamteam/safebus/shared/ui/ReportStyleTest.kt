@@ -39,6 +39,7 @@ class ReportStyleTest {
         assertEquals(R.color.core_information, stateColorResource("PENDING"))
         assertEquals(R.color.core_closed, stateColorResource("CLOSED"))
         assertEquals(R.color.core_inactive, stateColorResource("EXPIRED"))
+        assertEquals(R.color.core_secondary, stateColorResource("AVAILABLE"))
     }
 
     @Test fun emergencyMeetsReportSizeAndActivatesWithOneTap() {

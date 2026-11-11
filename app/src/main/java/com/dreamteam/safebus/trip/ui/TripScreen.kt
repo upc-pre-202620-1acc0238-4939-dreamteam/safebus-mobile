@@ -26,7 +26,8 @@ import com.dreamteam.safebus.shared.ui.*
         }
         val shift = state.value.shift
         if (shift != null) {
-            CoreCard(stringResource(R.string.core_shift)) { StateLabel("ACTIVE"); TimeLabel(shift.startedAt) }
+            CoreCard(stringResource(R.string.core_shift)) { StateLabel("ACTIVE"); TimeLabel(shift.startedAt)
+                Text(stringResource(R.string.core_active_shift, shift.id), style = MaterialTheme.typography.bodySmall) }
             TrackingPanel(tracking, permission)
             CoreButton(R.string.core_close_shift, "closeShift", !state.busy, secondary = true) { confirmation = true }
         } else if (state.value.assignment?.status == "ACTIVE") {
@@ -34,7 +35,7 @@ import com.dreamteam.safebus.shared.ui.*
         } else if (state.value.assignment != null) {
             QrInput(qr, { qr = it }, !state.busy)
             CoreButton(R.string.core_activate_shift, "activateShift", !state.busy && qr.isNotBlank()) { activate(qr); qr = "" }
-        } else if (state.value.loaded) CoreEmpty(R.string.core_no_assignment, R.drawable.ic_assignment, Modifier.testTag("noAssignment"))
+        } else if (state.value.loaded) CoreEmpty(R.string.core_no_assignment, icon = R.drawable.ic_assignment, modifier = Modifier.testTag("noAssignment"))
     }
     if (confirmation) AlertDialog(onDismissRequest = { confirmation = false }, title = { Text(stringResource(R.string.core_close_shift)) },
         text = { Text(stringResource(R.string.core_close_shift_detail)) }, confirmButton = { TextButton({ confirmation = false; close() }, Modifier.testTag("confirmShiftClose")) { Text(stringResource(R.string.core_confirm)) } },

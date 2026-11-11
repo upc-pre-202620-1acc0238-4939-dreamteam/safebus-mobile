@@ -17,8 +17,8 @@ import kotlinx.coroutines.delay
     rotate: (Long) -> Unit, revoke: (Long) -> Unit, hideKey: () -> Unit, counter: (() -> Unit)?, back: () -> Unit) {
     var label by remember { mutableStateOf("") }
     var confirmation by remember { mutableStateOf<Pair<Long, Boolean>?>(null) }
-    CorePage(R.string.extra_sources, state.busy, state.failure, refresh) {
-        CoreButton(R.string.core_back, "sourcesBack", action = back)
+    CorePage(R.string.extra_sources, state.busy, state.failure, refresh, back) {
+        CoreButton(R.string.core_back, "sourcesBack", secondary = true, action = back)
         state.value.occupancy?.let { occupancy -> CoreCard(stringResource(R.string.extra_occupancy)) {
             StateLabel(occupancy.status)
             occupancy.count?.let { Text(pluralStringResource(R.plurals.core_count_value, it, it)) }
@@ -27,14 +27,14 @@ import kotlinx.coroutines.delay
             occupancy.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
             TimeLabel(occupancy.generatedAt)
         } }
-        if (state.value.loaded && state.value.sources.isEmpty()) Text(stringResource(R.string.extra_no_sources))
+        if (state.value.loaded && state.value.sources.isEmpty()) CoreEmpty(R.string.extra_no_sources, icon = R.drawable.ic_groups)
         state.value.sources.forEach { source -> CoreCard(stringResource(R.string.extra_source_ref, source.id)) {
             source.label?.let { Text(it) }
             Text(stringResource(if (source.status == "ACTIVE") R.string.core_enabled else R.string.extra_source_revoked))
             TimeLabel(source.createdAt); source.rotatedAt?.let { TimeLabel(it) }; source.revokedAt?.let { TimeLabel(it) }
             if (source.status == "ACTIVE") {
-                CoreButton(R.string.extra_rotate_source, "rotate:${source.id}", !state.busy) { confirmation = source.id to true }
-                CoreButton(R.string.extra_revoke_source, "revoke:${source.id}", !state.busy, danger = true) { confirmation = source.id to false }
+                CoreButton(R.string.extra_rotate_source, "rotate:${source.id}", !state.busy, secondary = true) { confirmation = source.id to true }
+                CoreButton(R.string.extra_revoke_source, "revoke:${source.id}", !state.busy, secondary = true) { confirmation = source.id to false }
             }
         } }
         if (state.value.sources.none { it.status == "ACTIVE" }) {
@@ -44,7 +44,7 @@ import kotlinx.coroutines.delay
         state.value.credential?.let { credential -> CoreCard(stringResource(R.string.core_credential)) {
             Text(stringResource(R.string.extra_key_once))
             SelectionContainer { Text(credential.key, Modifier.testTag("sourceKey")) }
-            CoreButton(R.string.extra_hide_key, "hideSourceKey", action = hideKey)
+            CoreButton(R.string.extra_hide_key, "hideSourceKey", secondary = true, action = hideKey)
         } }
         if (counter != null) CoreButton(R.string.extra_counter, "openCounter", action = counter)
         else Text(stringResource(R.string.extra_counter_unavailable))
@@ -72,13 +72,13 @@ import kotlinx.coroutines.delay
             delay(45_000)
         }
     }
-    CorePage(R.string.extra_counter_title, state.busy, state.failure) {
-        CoreButton(R.string.core_back, "counterBack", action = back)
-        Text(stringResource(R.string.extra_counter_help))
+    CorePage(R.string.extra_counter_title, state.busy, state.failure, back = back) {
+        CoreButton(R.string.core_back, "counterBack", secondary = true, action = back)
+        CoreNotice(stringResource(R.string.extra_counter_help), icon = R.drawable.ic_groups)
         CoreField(R.string.extra_device_key, key, { key = it }, "counterKey", password = true, enabled = !state.busy)
         state.failure?.expectedSequence?.let { Text(stringResource(R.string.extra_expected_sequence, it)) }
         state.value.counter.receipt?.let { receipt ->
-            Text(pluralStringResource(R.plurals.core_count_value, receipt.count, receipt.count))
+            CoreCard { Text(pluralStringResource(R.plurals.core_count_value, receipt.count, receipt.count), style = MaterialTheme.typography.headlineMedium) }
             Text(stringResource(R.string.extra_next_sequence, receipt.nextSequence))
         }
         if (pending != null) {

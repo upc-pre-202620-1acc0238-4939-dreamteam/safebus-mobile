@@ -20,5 +20,4 @@
     <dimen name="core_message_height">120dp</dimen>
     <dimen name="core_photo_height">220dp</dimen>
     <dimen name="core_thumbnail">64dp</dimen>
-    <dimen name="core_map_height">280dp</dimen>
 </resources>

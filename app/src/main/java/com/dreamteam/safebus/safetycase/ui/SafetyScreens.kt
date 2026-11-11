@@ -22,7 +22,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
     val returnToForm = { reviewing = false }
     CorePage(if (reviewing) R.string.ui_review_request else R.string.core_request_new, state.busy, state.failure,
         back = { if (reviewing) returnToForm() else back() }) {
-        CoreNotice(stringResource(R.string.ui_request_notice), R.drawable.ic_shield)
+        CoreNotice(stringResource(R.string.ui_request_notice), icon = R.drawable.ic_shield)
         val receipt = state.value.receipt
         if (receipt != null) {
             DeliveryNotice(receipt.delivery)
@@ -49,7 +49,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
 
 @Composable private fun ContributionProgress(count: Int) {
     Text(stringResource(R.string.core_contributors, count))
-    LinearProgressIndicator(progress = { (count / 3f).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(),
+    LinearProgressIndicator(progress = { (count / 3f).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(), trackColor = MaterialTheme.colorScheme.outlineVariant,
         color = MaterialTheme.colorScheme.secondary)
 }
 
@@ -75,13 +75,13 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
         SafetyTab.REVIEWS -> R.string.core_reviews
     }
     CorePage(title, state.busy, state.failure, refresh) {
-        if (state.value.decisionSaved) CoreNotice(stringResource(R.string.core_decision_saved), R.drawable.ic_check_circle)
+        if (state.value.decisionSaved) CoreNotice(stringResource(R.string.core_decision_saved), icon = R.drawable.ic_check_circle)
         when (tab) {
             SafetyTab.DRIVER_ALERTS, SafetyTab.EMERGENCIES -> {
                 if (tab == SafetyTab.DRIVER_ALERTS) CaseTabs(completed) { completed = it }
                 val alerts = (if (tab == SafetyTab.DRIVER_ALERTS) state.value.driverAlerts.filter { (it.status == "CLOSED") == completed }
                     else state.value.queue?.emergencies.orEmpty()).sortedBy { if (it.priority == "CRITICAL") 0 else 1 }
-                if (alerts.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_emergencies, R.drawable.ic_shield)
+                if (alerts.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_emergencies, icon = R.drawable.ic_shield)
                 alerts.forEachIndexed { index, alert ->
                     if (tab == SafetyTab.EMERGENCIES && (index == 0 || alerts[index - 1].priority != alert.priority))
                         Text(stringResource(if (alert.priority == "CRITICAL") R.string.ui_driver_emergencies else R.string.ui_passenger_emergencies), style = MaterialTheme.typography.titleLarge)
@@ -103,7 +103,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
             SafetyTab.REQUESTS -> {
                 CaseTabs(completed) { completed = it }
                 val requests = state.value.requests.filter { (it.status in setOf("APPROVED", "DECLINED", "NOT_APPROVED", "EXPIRED", "LATE")) == completed }
-                if (requests.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_requests, R.drawable.ic_assignment)
+                if (requests.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_requests, icon = R.drawable.ic_assignment)
                 requests.forEach { request -> CoreCard {
                     StateLabel(request.status); Text(request.message); TimeLabel(request.submittedAt)
                     request.contributorCount?.let { ContributionProgress(it) }
@@ -115,7 +115,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                 } }
             }
             SafetyTab.HISTORY -> {
-                if (state.value.history.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_bus_reports, R.drawable.ic_history)
+                if (state.value.history.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_bus_reports, icon = R.drawable.ic_history)
                 state.value.history.forEach { item -> CoreCard(item.reference) {
                     Text(stringResource(if (item.source == "DRIVER") R.string.core_role_driver else R.string.core_role_passenger))
                     StateLabel(item.state); TimeLabel(item.recordedAt)
@@ -124,7 +124,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
             }
             SafetyTab.REVIEWS -> {
                 val groups = state.value.queue?.groups.orEmpty()
-                if (groups.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_reviews, R.drawable.ic_fact_check)
+                if (groups.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_reviews, icon = R.drawable.ic_fact_check)
                 groups.forEach { group -> CoreCard(group.reference, accent = colorResource(R.color.core_pending)) {
                     StateLabel("AWAITING_APPROVAL")
                     Text(stringResource(R.string.core_bus_reference, group.busId)); ContributionProgress(group.contributors)

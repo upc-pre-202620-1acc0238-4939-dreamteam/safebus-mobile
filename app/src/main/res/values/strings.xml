@@ -156,8 +156,6 @@
     <string name="core_qr_scan">Open QR scanner</string>
     <string name="core_qr_hint">Scan with a compatible reader or paste the QR content provided by the company.</string>
     <string name="core_qr_no_scanner">No compatible QR scanner is installed. You can paste the code content.</string>
-    <string name="core_login_title">Your journey, safer</string>
-    <string name="core_login_description">Sign in with your DNI or the access provided by your company.</string>
     <string name="core_login_id">DNI or company code</string>
     <string name="core_password">Password</string>
     <string name="core_login">Sign in</string>
@@ -175,7 +173,6 @@
     <string name="core_api_invalid">Enter a valid HTTPS address without additional paths.</string>
     <string name="core_shift">My shift</string>
     <string name="core_no_assignment">You currently have no assigned shift.</string>
-    <string name="core_assignment">Company assignment</string>
     <string name="core_route">%1$s → %2$s</string>
     <string name="core_activate_shift">Validate QR and start shift</string>
     <string name="core_active_shift">Active shift: %1$d</string>
@@ -194,7 +191,6 @@
     <string name="core_journey">My journey</string>
     <string name="core_start_journey">Validate bus and start journey</string>
     <string name="core_journey_intro">Scan your bus QR code to view the company, route and driver.</string>
-    <string name="core_journey_active">Active journey</string>
     <string name="core_driver_name">Driver: %1$s</string>
     <string name="core_request_new">Send safety request</string>
     <string name="core_end_journey">End journey</string>
@@ -224,7 +220,6 @@
     <string name="core_attend_detail">Your account will be recorded as responsible for the response.</string>
     <string name="core_fleet">Fleet</string>
     <string name="core_assignments">Assignments</string>
-    <string name="core_search_bus">Search by plate</string>
     <plurals name="core_capacity_value">
         <item quantity="one">Capacity: %1$d passenger</item>
         <item quantity="other">Capacity: %1$d passengers</item>

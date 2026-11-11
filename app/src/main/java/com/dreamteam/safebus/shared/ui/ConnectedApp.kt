@@ -116,8 +116,8 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
 @Composable private fun ConnectionScreen(initial: String, save: (String) -> Boolean, back: () -> Unit, localAccess: (() -> Unit)?) {
     var value by remember { mutableStateOf(initial) }
     var invalid by remember { mutableStateOf(false) }
-    CorePage(R.string.core_server_settings) {
-        Text(stringResource(R.string.core_api_help))
+    CorePage(R.string.core_server_settings, back = back) {
+        CoreNotice(stringResource(R.string.core_api_help))
         CoreField(R.string.core_api_url, value, { value = it }, "apiEndpoint")
         if (invalid) Text(stringResource(R.string.core_api_invalid), color = MaterialTheme.colorScheme.error)
         CoreButton(R.string.core_api_save, "saveEndpoint") { invalid = !save(value) }
@@ -125,7 +125,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
             Text(stringResource(R.string.core_local_network_help))
             CoreButton(R.string.core_local_network_allow, "connectionLocalNetwork", action = request)
         }
-        CoreButton(R.string.core_back, "connectionBack", action = back)
+        CoreButton(R.string.core_back, "connectionBack", secondary = true, action = back)
     }
 }
 
@@ -218,7 +218,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                     CoreButton(R.string.core_emergency, "realPanic", !panic.busy, danger = true) { account.panicModel.panic(shift?.id) }
                 }
             }
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = dimensionResource(R.dimen.core_tiny),
+            NavigationBar(containerColor = MaterialTheme.colorScheme.primary, tonalElevation = dimensionResource(R.dimen.core_tiny),
                 modifier = Modifier.heightIn(min = dimensionResource(R.dimen.core_navigation_height) * LocalDensity.current.fontScale.coerceAtLeast(1f))) { tabs.forEach { destination ->
                 val badgeCount = when (destination) {
                     Destination.EMERGENCIES -> safety.value.queue?.emergencies?.size ?: 0
@@ -229,9 +229,9 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                     enabled = destination != Destination.HISTORY || journey != null, modifier = Modifier.testTag("nav:${destination.name}"),
                     icon = { BadgedBox(badge = { if (badgeCount > 0) Badge(containerColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_pending else R.color.core_emergency),
                         contentColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_text else R.color.core_white)) { Text(badgeCount.toString()) } }) { CoreIcon(destination.icon) } },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.onSecondary, selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                        indicatorColor = MaterialTheme.colorScheme.secondary, unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                    label = { Text(stringResource(destination.label), style = MaterialTheme.typography.labelSmall) })
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.onSecondary, selectedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        indicatorColor = MaterialTheme.colorScheme.secondary, unselectedIconColor = MaterialTheme.colorScheme.onPrimary, unselectedTextColor = MaterialTheme.colorScheme.onPrimary),
+                    label = { Text(stringResource(destination.label), style = MaterialTheme.typography.labelMedium) })
             } }
         }
     }) { padding ->

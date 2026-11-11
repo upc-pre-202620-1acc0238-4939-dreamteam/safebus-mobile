@@ -156,8 +156,6 @@
     <string name="core_qr_scan">Abrir lector QR</string>
     <string name="core_qr_hint">Escanee con un lector compatible o pegue el contenido del QR proporcionado por la empresa.</string>
     <string name="core_qr_no_scanner">No hay un lector QR compatible instalado. Puede pegar el contenido del código.</string>
-    <string name="core_login_title">Su viaje, más seguro</string>
-    <string name="core_login_description">Ingrese con su DNI o con el acceso entregado por su empresa.</string>
     <string name="core_login_id">DNI o código institucional</string>
     <string name="core_password">Contraseña</string>
     <string name="core_login">Iniciar sesión</string>
@@ -175,7 +173,6 @@
     <string name="core_api_invalid">Ingrese una dirección HTTPS válida sin rutas adicionales.</string>
     <string name="core_shift">Mi turno</string>
     <string name="core_no_assignment">Actualmente no tiene un turno asignado.</string>
-    <string name="core_assignment">Asignación de la empresa</string>
     <string name="core_route">%1$s → %2$s</string>
     <string name="core_activate_shift">Validar QR e iniciar turno</string>
     <string name="core_active_shift">Turno activo: %1$d</string>
@@ -194,7 +191,6 @@
     <string name="core_journey">Mi viaje</string>
     <string name="core_start_journey">Validar bus e iniciar viaje</string>
     <string name="core_journey_intro">Lea el QR de su bus para consultar la empresa, la ruta y el conductor.</string>
-    <string name="core_journey_active">Viaje activo</string>
     <string name="core_driver_name">Conductor: %1$s</string>
     <string name="core_request_new">Enviar solicitud de seguridad</string>
     <string name="core_end_journey">Finalizar viaje</string>
@@ -224,7 +220,6 @@
     <string name="core_attend_detail">Su cuenta quedará registrada como responsable de la atención.</string>
     <string name="core_fleet">Flota</string>
     <string name="core_assignments">Asignaciones</string>
-    <string name="core_search_bus">Buscar por placa</string>
     <plurals name="core_capacity_value">
         <item quantity="one">Capacidad: %1$d pasajero</item>
         <item quantity="many">Capacidad: %1$d pasajeros</item>
