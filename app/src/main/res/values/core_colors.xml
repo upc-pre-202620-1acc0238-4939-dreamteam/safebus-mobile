@@ -1,10 +1,22 @@
 <resources>
-    <color name="core_background">#10130C</color>
-    <color name="core_surface">#1C2118</color>
-    <color name="core_primary">#C3F400</color>
-    <color name="core_secondary">#596D0B</color>
-    <color name="core_text">#F3F6E9</color>
-    <color name="core_muted">#BCC4AE</color>
-    <color name="core_outline">#444D37</color>
-    <color name="core_emergency">#EF5350</color>
+    <color name="core_background">#F5F7FA</color>
+    <color name="core_surface">#FFFFFF</color>
+    <color name="core_primary">#0D2C54</color>
+    <color name="core_secondary">#00796B</color>
+    <color name="core_container">#DCE7F5</color>
+    <color name="core_text">#1B1F24</color>
+    <color name="core_muted">#5F6B7A</color>
+    <color name="core_outline">#D0D7DE</color>
+    <color name="core_white">#FFFFFF</color>
+    <color name="core_emergency">#C62828</color>
+    <color name="core_high">#BF360C</color>
+    <color name="core_pending">#F9A825</color>
+    <color name="core_information">#1565C0</color>
+    <color name="core_closed">#2E7D32</color>
+    <color name="core_inactive">#6B7480</color>
+    <color name="core_dark_background">#0F1720</color>
+    <color name="core_dark_surface">#18222E</color>
+    <color name="core_dark_text">#E6EAF0</color>
+    <color name="core_dark_muted">#A3ADB9</color>
+    <color name="core_dark_outline">#2C3846</color>
 </resources>

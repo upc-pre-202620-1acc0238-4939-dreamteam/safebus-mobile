@@ -1,17 +1,20 @@
 package com.dreamteam.safebus.shared.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.*
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.dreamteam.safebus.R
@@ -21,50 +24,91 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-@Composable fun CoreTheme(content: @Composable () -> Unit) {
-    val typography = Typography()
-    val inter = FontFamily(Font(R.font.inter))
-    MaterialTheme(colorScheme = darkColorScheme(primary = colorResource(R.color.core_primary), onPrimary = colorResource(R.color.core_background),
-        secondary = colorResource(R.color.core_secondary), background = colorResource(R.color.core_background), surface = colorResource(R.color.core_surface),
-        onSurface = colorResource(R.color.core_text), onBackground = colorResource(R.color.core_text), onSurfaceVariant = colorResource(R.color.core_muted),
-        outline = colorResource(R.color.core_outline), error = colorResource(R.color.core_emergency)),
-        typography = typography.copy(headlineMedium = typography.headlineMedium.copy(fontFamily = inter), titleLarge = typography.titleLarge.copy(fontFamily = inter),
-            titleMedium = typography.titleMedium.copy(fontFamily = inter), bodyLarge = typography.bodyLarge.copy(fontFamily = inter),
-            bodyMedium = typography.bodyMedium.copy(fontFamily = inter), labelLarge = typography.labelLarge.copy(fontFamily = inter)), content = content)
+@Composable fun CoreIcon(icon: Int, modifier: Modifier = Modifier) {
+    Icon(painterResource(icon), contentDescription = null, modifier.size(dimensionResource(R.dimen.core_icon)))
 }
 
 @Composable fun CorePage(@StringRes title: Int, busy: Boolean = false, failure: Failure? = null,
-    refresh: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(dimensionResource(R.dimen.core_space)),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_gap))) {
-        Text(stringResource(title), style = MaterialTheme.typography.headlineMedium)
-        if (refresh != null) TextButton(refresh, enabled = !busy, modifier = Modifier.testTag("coreRefresh")) { Text(stringResource(R.string.core_refresh)) }
-        if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth().testTag("coreLoading")); Text(stringResource(R.string.core_loading)) }
-        failure?.let { FailureNotice(it) }
-        content()
-    }
-}
-
-@Composable fun CoreCard(title: String? = null, content: @Composable ColumnScope.() -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(dimensionResource(R.dimen.core_space)), verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
-            title?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+    refresh: (() -> Unit)? = null, back: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        Surface(color = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
+            Row(Modifier.fillMaxWidth().heightIn(min = dimensionResource(R.dimen.core_appbar_height)).padding(horizontal = dimensionResource(R.dimen.core_small)),
+                verticalAlignment = Alignment.CenterVertically) {
+                if (back != null) IconButton(back, Modifier.testTag("pageBack")) {
+                    Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.core_back))
+                } else Spacer(Modifier.width(dimensionResource(R.dimen.core_small)))
+                Text(stringResource(title), Modifier.weight(1f).padding(vertical = dimensionResource(R.dimen.core_small)), style = MaterialTheme.typography.headlineSmall)
+                if (refresh != null) IconButton(refresh, enabled = !busy, modifier = Modifier.testTag("coreRefresh")) {
+                    Icon(painterResource(R.drawable.ic_refresh), stringResource(R.string.core_refresh))
+                }
+            }
+        }
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(dimensionResource(R.dimen.core_space)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_gap))) {
+            if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth().testTag("coreLoading")); Text(stringResource(R.string.core_loading)) }
+            failure?.let { FailureNotice(it) }
             content()
         }
     }
 }
 
-@Composable fun CoreButton(@StringRes label: Int, tag: String, enabled: Boolean = true, danger: Boolean = false, action: () -> Unit) {
-    Button(action, Modifier.fillMaxWidth().heightIn(min = dimensionResource(if (danger) R.dimen.core_emergency_height else R.dimen.core_action_height)).testTag(tag), enabled = enabled,
-        colors = if (danger) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.background) else ButtonDefaults.buttonColors()) {
-        Text(stringResource(label))
+@Composable fun CoreCard(title: String? = null, accent: Color? = null, content: @Composable ColumnScope.() -> Unit) {
+    Card(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(dimensionResource(R.dimen.core_border), accent ?: MaterialTheme.colorScheme.outline),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(dimensionResource(R.dimen.core_space)), verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+            title?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
+            content()
+        }
     }
 }
 
+@Composable fun CoreNotice(text: String, icon: Int = R.drawable.ic_info, modifier: Modifier = Modifier) {
+    Surface(modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer, shape = MaterialTheme.shapes.medium) {
+        Row(Modifier.padding(dimensionResource(R.dimen.core_space)), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+            CoreIcon(icon); Text(text, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable fun CoreEmpty(@StringRes message: Int, icon: Int = R.drawable.ic_info, modifier: Modifier = Modifier) {
+    CoreCard {
+        Column(modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.core_section)), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_space))) {
+            Icon(painterResource(icon), null, Modifier.size(dimensionResource(R.dimen.core_status_icon)), tint = MaterialTheme.colorScheme.secondary)
+            Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable fun CoreButton(@StringRes label: Int, tag: String, enabled: Boolean = true, danger: Boolean = false,
+    secondary: Boolean = false, icon: Int? = null, action: () -> Unit) {
+    val modifier = Modifier.fillMaxWidth().heightIn(min = dimensionResource(when { danger -> R.dimen.core_emergency_height; secondary -> R.dimen.core_secondary_height; else -> R.dimen.core_action_height })).testTag(tag)
+    val body: @Composable RowScope.() -> Unit = {
+        icon?.let { CoreIcon(it); Spacer(Modifier.width(dimensionResource(R.dimen.core_small))) }
+        Text(stringResource(label), style = if (danger) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.labelLarge)
+    }
+    if (secondary) OutlinedButton(action, modifier, enabled, shape = MaterialTheme.shapes.small,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+        border = BorderStroke(dimensionResource(R.dimen.core_border), MaterialTheme.colorScheme.outline), content = body)
+    else Button(action, modifier, enabled, shape = if (danger) MaterialTheme.shapes.medium else MaterialTheme.shapes.small,
+        colors = ButtonDefaults.buttonColors(containerColor = if (danger) colorResource(R.color.core_emergency) else MaterialTheme.colorScheme.primary,
+            contentColor = colorResource(R.color.core_white)), content = body)
+}
+
 @Composable fun CoreField(@StringRes label: Int, value: String, onChange: (String) -> Unit, tag: String, password: Boolean = false, multiline: Boolean = false, enabled: Boolean = true) {
-    OutlinedTextField(value, onChange, Modifier.fillMaxWidth().testTag(tag), enabled = enabled, label = { Text(stringResource(label)) },
-        singleLine = !multiline, minLines = if (multiline) 3 else 1,
-        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None)
+    var visible by rememberSaveable { mutableStateOf(false) }
+    val leading = when { password -> R.drawable.ic_lock; tag == "fleetSearch" -> R.drawable.ic_search; tag == "qrContent" -> R.drawable.ic_qr_code_scanner; tag == "coreLoginId" -> R.drawable.ic_badge; else -> null }
+    OutlinedTextField(value, onChange, Modifier.fillMaxWidth().heightIn(min = dimensionResource(if (multiline) R.dimen.core_message_height else R.dimen.core_action_height)).testTag(tag), enabled = enabled,
+        label = { Text(stringResource(label)) }, singleLine = !multiline, minLines = if (multiline) 4 else 1, shape = MaterialTheme.shapes.small,
+        leadingIcon = leading?.let { { CoreIcon(it) } }, trailingIcon = if (password) { {
+            IconButton({ visible = !visible }) { Icon(painterResource(if (visible) R.drawable.ic_visibility_off else R.drawable.ic_visibility), stringResource(if (visible) R.string.hide_password else R.string.show_password)) }
+        } } else null,
+        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = MaterialTheme.colorScheme.surface, unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+            focusedLabelColor = MaterialTheme.colorScheme.onSurface, cursorColor = MaterialTheme.colorScheme.onSurface),
+        visualTransformation = if (password && !visible) PasswordVisualTransformation() else VisualTransformation.None)
 }
 
 fun failureText(failure: Failure): Int = when (failure.code) {
@@ -102,11 +146,22 @@ fun failureText(failure: Failure): Int = when (failure.code) {
 }
 
 @Composable fun FailureNotice(failure: Failure) {
-    Text(stringResource(failureText(failure)), color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.testTag("coreError").semantics { liveRegion = LiveRegionMode.Polite })
+    CoreNotice(stringResource(failureText(failure)), R.drawable.ic_info,
+        Modifier.testTag("coreError").semantics { liveRegion = LiveRegionMode.Polite })
 }
 @Composable fun DeliveryNotice(delivery: Delivery) {
-    Text(stringResource(if (delivery == Delivery.PENDING) R.string.core_pending else R.string.core_received), Modifier.testTag("deliveryNotice").semantics { liveRegion = LiveRegionMode.Polite })
+    CoreNotice(stringResource(if (delivery == Delivery.PENDING) R.string.core_pending else R.string.core_received),
+        if (delivery == Delivery.PENDING) R.drawable.ic_cloud_off else R.drawable.ic_check_circle,
+        Modifier.testTag("deliveryNotice").semantics { liveRegion = LiveRegionMode.Polite })
+}
+fun stateColorResource(value: String): Int = when (value) {
+    "CRITICAL" -> R.color.core_emergency
+    "HIGH" -> R.color.core_high
+    "AWAITING_APPROVAL", "STALE" -> R.color.core_pending
+    "CLOSED", "ENDED" -> R.color.core_closed
+    "PENDING", "COLLECTING", "COUNTED", "ATTACHED" -> R.color.core_information
+    "ACTIVE", "ASSIGNED", "CURRENT", "VALIDATED", "VERIFIED", "APPROVED" -> R.color.core_secondary
+    else -> R.color.core_inactive
 }
 @Composable fun StateLabel(value: String) {
     val label = when (value) {
@@ -129,6 +184,24 @@ fun failureText(failure: Failure): Int = when (failure.code) {
         "HIGH" -> R.string.core_status_high
         else -> R.string.core_status_unknown
     }
-    Text(stringResource(label), color = if (value == "CRITICAL") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+    val icon = when (value) {
+        "CRITICAL", "HIGH" -> R.drawable.ic_warning
+        "AWAITING_APPROVAL", "STALE", "PENDING" -> R.drawable.ic_schedule
+        "COLLECTING", "COUNTED", "ATTACHED" -> R.drawable.ic_groups
+        "CLOSED", "ENDED", "VERIFIED", "VALIDATED" -> R.drawable.ic_check_circle
+        else -> R.drawable.ic_info
+    }
+    Surface(color = colorResource(stateColorResource(value)), contentColor = colorResource(if (value in setOf("STALE", "AWAITING_APPROVAL")) R.color.core_text else R.color.core_white), shape = RoundedCornerShape(50)) {
+        Row(Modifier.heightIn(min = dimensionResource(R.dimen.core_chip_height)).padding(horizontal = dimensionResource(R.dimen.core_small), vertical = dimensionResource(R.dimen.core_tiny)),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_tiny))) {
+            Icon(painterResource(icon), null, Modifier.size(dimensionResource(R.dimen.core_chip_icon)))
+            Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
+        }
+    }
 }
-@Composable fun TimeLabel(at: Instant) { Text(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).format(at)) }
+@Composable fun TimeLabel(at: Instant) {
+    Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_tiny)), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_schedule), null, Modifier.size(dimensionResource(R.dimen.core_chip_icon)))
+        Text(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).format(at), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

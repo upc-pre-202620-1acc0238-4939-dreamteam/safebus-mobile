@@ -1,8 +1,24 @@
 <resources>
     <dimen name="core_space">16dp</dimen>
-    <dimen name="core_gap">12dp</dimen>
+    <dimen name="core_gap">16dp</dimen>
     <dimen name="core_small">8dp</dimen>
+    <dimen name="core_tiny">4dp</dimen>
+    <dimen name="core_section">24dp</dimen>
+    <dimen name="core_emergency_gap">32dp</dimen>
     <dimen name="core_action_height">56dp</dimen>
-    <dimen name="core_emergency_height">72dp</dimen>
+    <dimen name="core_secondary_height">48dp</dimen>
+    <dimen name="core_emergency_height">96dp</dimen>
+    <dimen name="core_appbar_height">64dp</dimen>
+    <dimen name="core_navigation_height">80dp</dimen>
+    <dimen name="core_chip_height">32dp</dimen>
+    <dimen name="core_icon">24dp</dimen>
+    <dimen name="core_chip_icon">16dp</dimen>
+    <dimen name="core_status_icon">32dp</dimen>
+    <dimen name="core_card_radius">12dp</dimen>
+    <dimen name="core_control_radius">8dp</dimen>
+    <dimen name="core_border">1dp</dimen>
+    <dimen name="core_message_height">120dp</dimen>
     <dimen name="core_photo_height">220dp</dimen>
+    <dimen name="core_thumbnail">64dp</dimen>
+    <dimen name="core_map_height">280dp</dimen>
 </resources>
