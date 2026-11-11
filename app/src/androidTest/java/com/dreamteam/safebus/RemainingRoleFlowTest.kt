@@ -51,6 +51,7 @@ class RemainingRoleFlowTest {
         click("coreSignIn")
         await("fleetSearch")
         compose.onNodeWithTag("fleetSearch").performTextInput("UC-$suffix")
+        click("busDetails:${bus.id}")
         click("sources:${bus.id}")
         compose.waitUntil(20000) { compose.onAllNodes(hasTestTag("registerSource") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("sourceLabel").performTextInput("Native counter")

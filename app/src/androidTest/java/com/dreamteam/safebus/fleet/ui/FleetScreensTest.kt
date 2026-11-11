@@ -18,6 +18,37 @@ import org.junit.Test
 
 class FleetScreensTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun searchMatchesDriverAndRouteAndFiltersStaleLocations() {
+        val bus = locatedBus().copy(route = "Lima Centro", driver = "Ana Perez", locationStatus = "STALE")
+        compose.setContent { CoreTheme { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus), Instant.EPOCH))), {}) } }
+        compose.onNodeWithTag("fleetSearch").performTextInput("Ana")
+        compose.onNodeWithText("ABC-123").assertExists()
+        compose.onNodeWithTag("fleetSearch").performTextReplacement("Centro")
+        compose.onNodeWithText("ABC-123").assertExists()
+        compose.onNodeWithTag("fleetFilter:${com.dreamteam.safebus.R.string.ui_current}").performClick()
+        compose.onNodeWithText("ABC-123").assertDoesNotExist()
+        compose.onNodeWithTag("fleetFilter:${com.dreamteam.safebus.R.string.ui_stale}").performClick()
+        compose.onNodeWithText("ABC-123").assertExists()
+        compose.onNodeWithTag("fleetMap:true").performClick()
+        compose.onNodeWithTag("fleetMapFallback").assertExists()
+    }
+    @Test fun assignmentWizardRequiresReviewBeforePersistingAndRetainsBackValues() {
+        var saved: FleetChange? = null
+        compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { saved = it }, {}) } }
+        listOf("driver" to "1", "bus" to "2", "route" to "3").forEach { (field, value) ->
+            compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput(value)
+            compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        }
+        compose.onNodeWithTag("provision:start").performScrollTo().performTextInput("2026-11-12T08:00")
+        compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2026-11-12T12:00")
+        compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        assertNull(saved)
+        compose.onNodeWithTag("assignmentBack").performScrollTo().performClick()
+        compose.onNodeWithTag("provision:start").assertTextContains("2026-11-12T08:00")
+        compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        compose.onNodeWithTag("saveProvision").performScrollTo().performClick()
+        assertEquals(2L, (saved as FleetChange.Assignment).busId)
+    }
     @Test fun mapActionPreservesCoordinatesAndViewIntent() {
         val bus = locatedBus()
         var opened: Intent? = null
@@ -30,6 +61,7 @@ class FleetScreensTest {
                 CoreTheme { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus), Instant.EPOCH))), {}) }
             }
         }
+        compose.onNodeWithTag("fleetMap:true").performClick()
         compose.onNodeWithTag("map:1").performScrollTo().performClick()
         assertEquals(Intent.ACTION_VIEW, opened?.action)
         assertEquals("geo:-12.0464,-77.0428?q=-12.0464,-77.0428", opened?.data.toString())
@@ -46,6 +78,7 @@ class FleetScreensTest {
                 CoreTheme { FleetScreen(state, {}) }
             }
         }
+        compose.onNodeWithTag("fleetMap:true").performClick()
         compose.onNodeWithTag("map:1").performScrollTo().performClick()
         compose.onNodeWithText("No hay una aplicación de mapas disponible. Puedes seguir consultando la lista.").assertExists()
         compose.onNodeWithText("ABC-123").assertExists()
@@ -56,6 +89,7 @@ class FleetScreensTest {
     @Test fun fleetUsesIndependentPluralsForPassengersEmergenciesAndReviews() {
         val bus = mutableStateOf(FleetBus(1, "ABC-123", true, 1, null, null, null, "UNAVAILABLE", null, "AVAILABLE", null, 1, null, 1, 2))
         compose.setContent { CoreTheme { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus.value), Instant.EPOCH))), {}) } }
+        compose.onNodeWithTag("busDetails:1").performScrollTo().performClick()
         compose.onNodeWithText("Capacidad: 1 pasajero").assertExists()
         compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
         compose.onNodeWithText("1 emergencia · 2 revisiones pendientes").assertExists()
@@ -67,7 +101,7 @@ class FleetScreensTest {
     @Test fun invalidAssignmentShowsFeedbackAndDoesNotSubmit() {
         var writes = 0
         compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { writes++ }, {}) } }
-        compose.onNodeWithTag("saveProvision").performScrollTo().performClick()
+        compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         compose.onNodeWithTag("coreError").assertExists()
         assertEquals(0, writes)
     }

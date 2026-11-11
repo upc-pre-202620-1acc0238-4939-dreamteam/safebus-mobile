@@ -4,16 +4,20 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.core.net.toUri
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.dreamteam.safebus.R
+import com.dreamteam.safebus.iam.ui.StepIndicator
 import com.dreamteam.safebus.fleet.domain.*
 import com.dreamteam.safebus.passenger.domain.BusQr
 import com.dreamteam.safebus.shared.domain.*
@@ -25,37 +29,77 @@ import java.time.ZoneId
     val context = LocalContext.current
     var search by remember { mutableStateOf("") }
     var mapMissing by remember { mutableStateOf(false) }
+    var map by remember { mutableStateOf(false) }
+    var filter by remember { mutableStateOf(R.string.ui_all) }
+    var selected by remember { mutableStateOf<Long?>(null) }
     CorePage(R.string.core_fleet, state.busy, state.failure, refresh) {
-        CoreField(R.string.core_search_bus, search, { search = it }, "fleetSearch")
-        if (mapMissing) Text(stringResource(R.string.core_map_unavailable))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+            listOf(false to R.string.ui_list, true to R.string.ui_map).forEach { (value, label) ->
+                FilterChip(map == value, { map = value }, { Text(stringResource(label)) },
+                    Modifier.weight(1f).heightIn(min = dimensionResource(R.dimen.core_secondary_height)).testTag("fleetMap:$value"))
+            }
+        }
+        CoreField(R.string.ui_fleet_search, search, { search = it }, "fleetSearch")
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+            listOf(R.string.ui_all, R.string.ui_current, R.string.ui_stale, R.string.ui_unavailable, R.string.ui_over_capacity).forEach { option ->
+                FilterChip(filter == option, { filter = option }, { Text(stringResource(option)) },
+                    Modifier.heightIn(min = dimensionResource(R.dimen.core_secondary_height)).testTag("fleetFilter:$option"))
+            }
+        }
+        if (map) CoreNotice(stringResource(R.string.ui_map_fallback), R.drawable.ic_map, Modifier.testTag("fleetMapFallback"))
+        if (mapMissing) CoreNotice(stringResource(R.string.core_map_unavailable), modifier = Modifier.testTag("mapUnavailable"))
         state.value.overview?.let { overview ->
             TimeLabel(overview.updatedAt)
-            val buses = overview.buses.filter { it.plate.contains(search, ignoreCase = true) }
-            if (buses.isEmpty()) Text(stringResource(R.string.core_empty))
-            buses.forEach { bus -> CoreCard(bus.plate) {
-                Text(stringResource(R.string.core_bus_reference, bus.id))
-                if (sources != null) CoreButton(R.string.extra_sources, "sources:${bus.id}") { sources(bus) }
-                Text(stringResource(if (bus.enabled) R.string.core_enabled else R.string.core_disabled))
-                bus.route?.let { Text(it) }; bus.driver?.let { Text(stringResource(R.string.core_driver_name, it)) }
-                bus.capacity?.let { Text(pluralStringResource(R.plurals.core_capacity_value, it, it)) }
-                StateLabel(bus.occupancyStatus)
-                bus.count?.let { Text(pluralStringResource(R.plurals.core_count_value, it, it)) }
-                bus.lastCountAt?.let { Text(stringResource(R.string.core_count_time)); TimeLabel(it) }
-                bus.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
-                if (bus.load == "OVER_CAPACITY") Text(stringResource(R.string.core_over_capacity), color = MaterialTheme.colorScheme.error)
+            val buses = overview.buses.filter { bus ->
+                listOfNotNull(bus.plate, bus.route, bus.driver).any { it.contains(search, ignoreCase = true) } && when (filter) {
+                    R.string.ui_current -> bus.locationStatus in setOf("CURRENT", "AVAILABLE")
+                    R.string.ui_stale -> bus.locationStatus == "STALE"
+                    R.string.ui_unavailable -> bus.position == null || bus.locationStatus == "UNAVAILABLE"
+                    R.string.ui_over_capacity -> bus.load == "OVER_CAPACITY"
+                    else -> true
+                }
+            }
+            if (buses.isEmpty()) CoreEmpty(R.string.core_empty, R.drawable.ic_directions_bus)
+            buses.forEach { bus -> CoreCard {
+                Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+                    CoreIcon(R.drawable.ic_directions_bus)
+                    Text(bus.plate, style = MaterialTheme.typography.titleLarge)
+                }
+                bus.route?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+                bus.driver?.let { Text(stringResource(R.string.core_driver_name, it)) }
+                StateLabel(bus.locationStatus)
+                bus.position?.let { TimeLabel(it.capturedAt) }
+                if (bus.count != null && bus.capacity != null) {
+                    Text(stringResource(R.string.ui_occupancy_ratio, bus.count, bus.capacity))
+                    LinearProgressIndicator(progress = { (bus.count.toFloat() / bus.capacity).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth(),
+                        color = if (bus.load == "OVER_CAPACITY") colorResource(R.color.core_pending) else MaterialTheme.colorScheme.secondary)
+                } else StateLabel(bus.occupancyStatus)
+                if (bus.load == "OVER_CAPACITY") CoreNotice(stringResource(R.string.core_over_capacity), R.drawable.ic_groups)
                 Text(stringResource(R.string.core_open_cases,
                     pluralStringResource(R.plurals.core_emergency_count, bus.emergencyCount, bus.emergencyCount),
-                    pluralStringResource(R.plurals.core_pending_reviews, bus.pendingGroups, bus.pendingGroups)))
-                bus.groups.forEach { group ->
-                    StateLabel(group.status)
-                    Text(stringResource(R.string.core_contributors, group.contributors))
-                    if (group.attached > 0) Text(stringResource(R.string.core_attached_count, group.attached))
+                    pluralStringResource(R.plurals.core_pending_reviews, bus.pendingGroups, bus.pendingGroups)), style = MaterialTheme.typography.bodyMedium)
+                CoreButton(if (selected == bus.id) R.string.core_back else R.string.ui_view_details, "busDetails:${bus.id}", secondary = true) {
+                    selected = if (selected == bus.id) null else bus.id
                 }
-                StateLabel(bus.locationStatus)
-                bus.position?.let { position ->
-                    TimeLabel(position.capturedAt)
-                    Text(stringResource(R.string.core_coordinates, position.latitude, position.longitude))
-                    CoreButton(R.string.core_open_map, "map:${bus.id}") {
+                if (selected == bus.id) {
+                    HorizontalDivider()
+                    Text(stringResource(R.string.ui_bus_details), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.core_bus_reference, bus.id))
+                    Text(stringResource(if (bus.enabled) R.string.core_enabled else R.string.core_disabled))
+                    bus.capacity?.let { Text(pluralStringResource(R.plurals.core_capacity_value, it, it)) }
+                    StateLabel(bus.occupancyStatus)
+                    bus.count?.let { Text(pluralStringResource(R.plurals.core_count_value, it, it)) }
+                    bus.lastCountAt?.let { Text(stringResource(R.string.core_count_time)); TimeLabel(it) }
+                    bus.lastHeartbeatAt?.let { Text(stringResource(R.string.core_heartbeat_time)); TimeLabel(it) }
+                    bus.groups.forEach { group ->
+                        StateLabel(group.status); Text(stringResource(R.string.core_contributors, group.contributors))
+                        if (group.attached > 0) Text(stringResource(R.string.core_attached_count, group.attached))
+                    }
+                    if (sources != null) CoreButton(R.string.extra_sources, "sources:${bus.id}", secondary = true) { sources(bus) }
+                }
+                if (map || selected == bus.id) bus.position?.let { position ->
+                    Text(stringResource(R.string.core_coordinates, position.latitude, position.longitude), style = MaterialTheme.typography.bodySmall)
+                    CoreButton(R.string.core_open_map, "map:${bus.id}", secondary = true, icon = R.drawable.ic_map) {
                         try { context.startActivity(Intent(Intent.ACTION_VIEW, "geo:${position.latitude},${position.longitude}?q=${position.latitude},${position.longitude}".toUri())) }
                         catch (_: ActivityNotFoundException) { mapMissing = true }
                     }
@@ -73,14 +117,16 @@ enum class ProvisionForm(val title: Int) {
 @Composable fun ProvisionScreen(state: ScreenState<FleetState>, save: (FleetChange) -> Unit, clear: () -> Unit) {
     var form by remember { mutableStateOf(ProvisionForm.ASSIGNMENT) }
     var fields by remember(form) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var step by remember(form) { mutableIntStateOf(0) }
     var invalid by remember(form) { mutableStateOf(false) }
     val zone = ZoneId.systemDefault()
     CorePage(R.string.core_assignments, state.busy, state.failure) {
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            ProvisionForm.entries.forEach { option -> TextButton({ form = option; clear() }, enabled = !state.busy) { Text(stringResource(option.title)) } }
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))) {
+            ProvisionForm.entries.forEach { option -> FilterChip(form == option, { form = option; clear() },
+                { Text(stringResource(option.title)) }, Modifier.heightIn(min = dimensionResource(R.dimen.core_secondary_height)), enabled = !state.busy) }
         }
         Text(stringResource(form.title), style = MaterialTheme.typography.titleLarge)
-        if (form == ProvisionForm.ASSIGNMENT) Text(stringResource(R.string.core_catalog_note))
+        if (form == ProvisionForm.ASSIGNMENT) { StepIndicator(step, 5); CoreNotice(stringResource(R.string.core_catalog_note)) }
         if (invalid) FailureNotice(Failure(FailureKind.VALIDATION))
         val labels = when (form) {
             ProvisionForm.BUS -> listOf("plate" to R.string.core_plate)
@@ -89,9 +135,29 @@ enum class ProvisionForm(val title: Int) {
             ProvisionForm.ASSIGNMENT -> listOf("driver" to R.string.core_driver_id, "bus" to R.string.core_bus_id, "route" to R.string.core_route_id, "start" to R.string.core_start_time, "end" to R.string.core_end_time)
             ProvisionForm.CAPACITY -> listOf("bus" to R.string.core_bus_id, "capacity" to R.string.core_capacity, "reference" to R.string.core_technical_record)
         }
-        labels.forEach { (key, label) -> CoreField(label, fields[key].orEmpty(), { fields = fields + (key to it) }, "provision:$key", password = key == "password", enabled = !state.busy) }
+        val visible = if (form != ProvisionForm.ASSIGNMENT) labels else when (step) {
+            0 -> labels.take(1)
+            1 -> labels.subList(1, 2)
+            2 -> labels.subList(2, 3)
+            3 -> labels.drop(3)
+            else -> emptyList()
+        }
+        CoreCard(stringResource(if (form == ProvisionForm.ASSIGNMENT && step == 4) R.string.ui_assignment_review else form.title)) {
+            visible.forEach { (key, label) -> CoreField(label, fields[key].orEmpty(), { fields = fields + (key to it); invalid = false }, "provision:$key", password = key == "password", enabled = !state.busy) }
+            if (form == ProvisionForm.ASSIGNMENT && step == 4) labels.forEach { (key, label) ->
+                Text(stringResource(label), style = MaterialTheme.typography.labelLarge)
+                Text(fields[key].orEmpty())
+            }
+        }
         if (form == ProvisionForm.ASSIGNMENT) Text(stringResource(R.string.core_time_zone, zone.id))
-        CoreButton(R.string.core_save, "saveProvision", !state.busy) {
+        if (form == ProvisionForm.ASSIGNMENT && step < 4) {
+            CoreButton(R.string.ui_continue, "assignmentNext", !state.busy) {
+                invalid = if (step < 3) fields[visible.single().first]?.toLongOrNull()?.let { it > 0 } != true else runCatching {
+                    LocalDateTime.parse(fields["end"]) > LocalDateTime.parse(fields["start"])
+                }.getOrDefault(false).not()
+                if (!invalid) step++
+            }
+        } else CoreButton(R.string.core_save, "saveProvision", !state.busy) {
             fun value(key: String) = fields[key].orEmpty()
             val change = runCatching { when (form) {
                 ProvisionForm.BUS -> FleetChange.Bus(value("plate"))
@@ -104,6 +170,7 @@ enum class ProvisionForm(val title: Int) {
             invalid = change == null || !change.valid()
             if (change != null && !invalid) { clear(); save(change); fields = fields - "password" }
         }
+        if (form == ProvisionForm.ASSIGNMENT && step > 0) CoreButton(R.string.core_back, "assignmentBack", !state.busy, secondary = true) { step--; invalid = false }
         state.value.receipt?.let { receipt -> CoreCard(stringResource(R.string.core_saved_id, receipt.id)) {
             receipt.credential?.let { credential ->
                 Text(stringResource(R.string.core_credential))
