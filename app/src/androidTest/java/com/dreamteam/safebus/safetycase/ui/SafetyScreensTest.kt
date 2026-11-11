@@ -12,6 +12,31 @@ import org.junit.Test
 
 class SafetyScreensTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun reviewKeepsEvidenceVisibleAndSendsOnlyOnExplicitConfirmation() {
+        var sends = 0
+        var edits = 0
+        val photo = Photo(byteArrayOf(1), "image/jpeg")
+        compose.setContent { CoreTheme { CorePage(com.dreamteam.safebus.R.string.ui_review_request) {
+            RequestReview("Recorded incident", photo, false, { sends++ }, { edits++ })
+        } } }
+        compose.onNodeWithText("Recorded incident").assertExists()
+        assertEquals(0, sends)
+        compose.onNodeWithTag("editRealRequest").performScrollTo().performClick()
+        assertEquals(1, edits)
+        assertEquals(0, sends)
+        compose.onNodeWithTag("sendRealRequest").performScrollTo().performClick()
+        assertEquals(1, sends)
+    }
+    @Test fun completedTabSeparatesClosedRequests() {
+        val active = PassengerRequest("00000000-0000-0000-0000-000000000001", "Active incident", "COLLECTING", Instant.EPOCH, 2, null, null, null)
+        val closed = active.copy(id = "00000000-0000-0000-0000-000000000002", message = "Closed incident", status = "EXPIRED")
+        compose.setContent { CoreTheme { SafetyListScreen(ScreenState(SafetyState(requests = listOf(active, closed))), SafetyTab.REQUESTS, {}, {}, {}) } }
+        compose.onNodeWithText("Active incident").assertExists()
+        compose.onNodeWithText("Closed incident").assertDoesNotExist()
+        compose.onNodeWithTag("cases:true").performClick()
+        compose.onNodeWithText("Closed incident").assertExists()
+        compose.onNodeWithText("Active incident").assertDoesNotExist()
+    }
     @Test fun pendingRequestDoesNotExposeRemoteEvidenceBeforeAcknowledgement() {
         val id = "00000000-0000-0000-0000-000000000001"
         val request = PassengerRequest(id, "Pending report", "PENDING", Instant.EPOCH, null, null, null, null)
@@ -23,7 +48,7 @@ class SafetyScreensTest {
         var submitted = 0
         compose.setContent { CoreTheme { RequestFormScreen(ScreenState(SafetyState(), failure = Failure.fromStatus(422)), { _, _ -> submitted++ }, {}) } }
         compose.onNodeWithTag("realIncidentMessage").performTextInput("Incident at the rear door")
-        compose.onNodeWithTag("sendRealRequest").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("reviewRealRequest").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithTag("coreError").assertExists()
         assertEquals(0, submitted)
     }

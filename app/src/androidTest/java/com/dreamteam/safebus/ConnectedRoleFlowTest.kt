@@ -101,7 +101,7 @@ class ConnectedRoleFlowTest {
         compose.onNodeWithTag("nav:HISTORY").assertIsEnabled()
         click("newRealRequest", true)
         compose.onNodeWithTag("realIncidentMessage").performTextInput("Actual report text")
-        compose.onNodeWithTag("sendRealRequest").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("reviewRealRequest").performScrollTo().assertIsNotEnabled()
         click("requestBack", true)
         click("nav:JOURNEY")
         click("endRealJourney", true)
