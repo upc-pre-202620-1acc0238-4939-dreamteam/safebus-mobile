@@ -28,6 +28,22 @@ class FleetScreensTest {
         compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2026-11-11T18:00")
         compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
     }
+    @Test fun pastedDatesIgnoreSurroundingWhitespaceInReviewAndServerSubmission() {
+        var saved: FleetChange.Assignment? = null
+        compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { saved = it as FleetChange.Assignment }, {}) } }
+        listOf("driver" to "4", "bus" to "1", "route" to "1").forEach { (field, value) ->
+            compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput(value)
+            compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        }
+        compose.onNodeWithTag("provision:start").performScrollTo().performTextInput(" 2028-04-15T09:30 ")
+        compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2028-11-22T18:45\n\n")
+        compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        compose.onNodeWithTag("coreError").assertDoesNotExist()
+        compose.onNodeWithTag("saveProvision").performScrollTo().performClick()
+        val zone = java.time.ZoneId.systemDefault()
+        assertEquals(java.time.LocalDateTime.parse("2028-04-15T09:30").atZone(zone).toInstant(), saved?.startsAt)
+        assertEquals(java.time.LocalDateTime.parse("2028-11-22T18:45").atZone(zone).toInstant(), saved?.endsAt)
+    }
     @Test fun assignmentSaveShowsProgressThenVisibleReceiptAndPreventsDuplicateSubmit() {
         val state = mutableStateOf(ScreenState(FleetState()))
         var writes = 0

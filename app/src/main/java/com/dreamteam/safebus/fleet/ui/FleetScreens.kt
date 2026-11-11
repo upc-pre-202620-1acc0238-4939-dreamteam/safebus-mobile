@@ -163,7 +163,7 @@ enum class ProvisionForm(val title: Int) {
         if (form == ProvisionForm.ASSIGNMENT && step < 4) {
             CoreButton(R.string.ui_continue, "assignmentNext", !state.busy) {
                 invalid = if (step < 3) fields[visible.single().first]?.toLongOrNull()?.let { it > 0 } != true else runCatching {
-                    LocalDateTime.parse(fields["end"]) > LocalDateTime.parse(fields["start"])
+                    LocalDateTime.parse(fields["end"]?.trim()) > LocalDateTime.parse(fields["start"]?.trim())
                 }.getOrDefault(false).not()
                 if (!invalid) step++
             }
@@ -174,7 +174,7 @@ enum class ProvisionForm(val title: Int) {
                 ProvisionForm.DRIVER -> FleetChange.Driver(value("name"), value("login"), value("password"))
                 ProvisionForm.ROUTE -> FleetChange.Route(value("name"), value("origin"), value("destination"))
                 ProvisionForm.ASSIGNMENT -> FleetChange.Assignment(value("driver").toLong(), value("bus").toLong(), value("route").toLong(),
-                    LocalDateTime.parse(value("start")).atZone(zone).toInstant(), LocalDateTime.parse(value("end")).atZone(zone).toInstant())
+                    LocalDateTime.parse(value("start").trim()).atZone(zone).toInstant(), LocalDateTime.parse(value("end").trim()).atZone(zone).toInstant())
                 ProvisionForm.CAPACITY -> FleetChange.Capacity(value("bus").toLong(), value("capacity").toInt(), value("reference"))
             } }.getOrNull()
             invalid = change == null || !change.valid()
