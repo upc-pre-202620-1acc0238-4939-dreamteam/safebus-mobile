@@ -80,7 +80,7 @@ class FleetScreensTest {
         }
         compose.onNodeWithTag("fleetMap:true").performClick()
         compose.onNodeWithTag("map:1").performScrollTo().performClick()
-        compose.onNodeWithText("No hay una aplicación de mapas disponible. Puedes seguir consultando la lista.").assertExists()
+        compose.onNodeWithTag("mapUnavailable").assertExists()
         compose.onNodeWithText("ABC-123").assertExists()
         assertEquals(listOf(bus), state.value.overview?.buses)
     }
@@ -90,13 +90,13 @@ class FleetScreensTest {
         val bus = mutableStateOf(FleetBus(1, "ABC-123", true, 1, null, null, null, "UNAVAILABLE", null, "AVAILABLE", null, 1, null, 1, 2))
         compose.setContent { CoreTheme { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus.value), Instant.EPOCH))), {}) } }
         compose.onNodeWithTag("busDetails:1").performScrollTo().performClick()
-        compose.onNodeWithText("Capacidad: 1 pasajero").assertExists()
-        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
-        compose.onNodeWithText("1 emergencia · 2 revisiones pendientes").assertExists()
+        compose.onNodeWithText("Capacity: 1 passenger").assertExists()
+        compose.onNodeWithText("Occupancy: 1 passenger").assertExists()
+        compose.onNodeWithText("1 emergency · 2 pending reviews").assertExists()
         compose.runOnIdle { bus.value = bus.value.copy(capacity = 40, count = 0, emergencyCount = 2, pendingGroups = 1) }
-        compose.onNodeWithText("Capacidad: 40 pasajeros").assertExists()
-        compose.onNodeWithText("Ocupación: 0 pasajeros").assertExists()
-        compose.onNodeWithText("2 emergencias · 1 revisión pendiente").assertExists()
+        compose.onNodeWithText("Capacity: 40 passengers").assertExists()
+        compose.onNodeWithText("Occupancy: 0 passengers").assertExists()
+        compose.onNodeWithText("2 emergencies · 1 pending review").assertExists()
     }
     @Test fun invalidAssignmentShowsFeedbackAndDoesNotSubmit() {
         var writes = 0

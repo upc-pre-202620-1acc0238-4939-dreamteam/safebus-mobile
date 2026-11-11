@@ -16,18 +16,18 @@ class CountingScreensTest {
     @Test fun occupancyUsesPassengerSingularAndPlural() {
         val occupancy = mutableStateOf(Occupancy(1, "AVAILABLE", null, 1, 1, null, null, null, Instant.EPOCH))
         compose.setContent { CoreTheme { CountingScreen(ScreenState(CountingState(occupancy = occupancy.value)), {}, {}, {}, {}, {}, null, {}) } }
-        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
-        compose.onNodeWithText("Capacidad: 1 pasajero").assertExists()
+        compose.onNodeWithText("Occupancy: 1 passenger").assertExists()
+        compose.onNodeWithText("Capacity: 1 passenger").assertExists()
         compose.runOnIdle { occupancy.value = occupancy.value.copy(count = 0, capacity = 40) }
-        compose.onNodeWithText("Ocupación: 0 pasajeros").assertExists()
-        compose.onNodeWithText("Capacidad: 40 pasajeros").assertExists()
+        compose.onNodeWithText("Occupancy: 0 passengers").assertExists()
+        compose.onNodeWithText("Capacity: 40 passengers").assertExists()
     }
     @Test fun confirmedCountUsesPassengerSingularAndPlural() {
         val receipt = mutableStateOf(CountReceipt(1, 2, Instant.EPOCH))
         compose.setContent { CoreTheme { CounterScreen(ScreenState(CounterUiState(CounterState(receipt = receipt.value))), false, { _, _, _, _ -> }, {}, {}, {}) } }
-        compose.onNodeWithText("Ocupación: 1 pasajero").assertExists()
+        compose.onNodeWithText("Occupancy: 1 passenger").assertExists()
         compose.runOnIdle { receipt.value = CountReceipt(2, 3, Instant.EPOCH) }
-        compose.onNodeWithText("Ocupación: 2 pasajeros").assertExists()
+        compose.onNodeWithText("Occupancy: 2 passengers").assertExists()
     }
     @Test fun revocationRequiresConfirmationAndRejectionDoesNotChangeSource() {
         var calls = 0
