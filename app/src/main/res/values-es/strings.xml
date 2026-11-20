@@ -346,6 +346,9 @@
     <string name="core_local_network_help">Este servidor está en una red local. Autorice el acceso para conectar SafeBus. Los servidores de Internet no necesitan este permiso.</string>
     <string name="core_local_network_allow">Permitir acceso a la red local</string>
     <string name="core_local_network_denied">El acceso sigue desactivado. Puede volver a solicitarlo, habilitar Dispositivos cercanos en los ajustes de SafeBus o elegir otro servidor.</string>
+    <string name="ui_choose_date_time">Elegir fecha y hora</string>
+    <string name="ui_choose_time">Elegir hora</string>
+    <string name="ui_assignment_dates_invalid">Selecciona ambas fechas y horas. El fin debe ser posterior al inicio.</string>
 </resources>
 
 

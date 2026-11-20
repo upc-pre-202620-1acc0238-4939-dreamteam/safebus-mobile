@@ -342,6 +342,9 @@
     <string name="core_local_network_help">This server is on a local network. Allow access to connect SafeBus. Internet servers do not need this permission.</string>
     <string name="core_local_network_allow">Allow local network access</string>
     <string name="core_local_network_denied">Access is still disabled. Request it again, enable Nearby devices in SafeBus settings or choose another server.</string>
+    <string name="ui_choose_date_time">Choose date and time</string>
+    <string name="ui_choose_time">Choose time</string>
+    <string name="ui_assignment_dates_invalid">Select both dates and times. The end must be after the start.</string>
 </resources>
 
 
