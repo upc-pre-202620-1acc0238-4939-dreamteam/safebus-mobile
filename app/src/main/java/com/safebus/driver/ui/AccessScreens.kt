@@ -33,7 +33,7 @@ fun LanguageSelector(language: String, onLanguage: (String) -> Unit) {
 }
 
 @Composable
-fun WelcomeScreen(language: String, onLanguage: (String) -> Unit, onLogin: () -> Unit, onRegister: () -> Unit) {
+fun WelcomeScreen(language: String, onLanguage: (String) -> Unit, onLogin: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { LanguageSelector(language, onLanguage) }
         Spacer(Modifier.weight(1f).heightIn(min = 80.dp))
@@ -46,13 +46,12 @@ fun WelcomeScreen(language: String, onLanguage: (String) -> Unit, onLogin: () ->
         Spacer(Modifier.weight(1f).heightIn(min = 96.dp))
         PrimaryAction(stringResource(R.string.sign_in), onLogin, Modifier.testTag("welcomeLogin"))
         Spacer(Modifier.height(8.dp))
-        SecondaryAction(stringResource(R.string.create_account), onRegister, Modifier.testTag("welcomeRegister"))
         Spacer(Modifier.height(48.dp))
     }
 }
 
 @Composable
-fun LoginScreen(onSuccess: (UserRole) -> Unit, onRegister: () -> Unit, registeredDni: String = "", registeredPassword: String = "") {
+fun LoginScreen(onSuccess: (UserRole) -> Unit) {
     var code by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var visible by rememberSaveable { mutableStateOf(false) }
@@ -73,10 +72,8 @@ fun LoginScreen(onSuccess: (UserRole) -> Unit, onRegister: () -> Unit, registere
         if (invalid) Notice(stringResource(R.string.invalid_credentials), Modifier.testTag("loginError"), R.drawable.ic_info)
         PrimaryAction(stringResource(R.string.sign_in), {
             val role = MockAccounts.roleFor(code, password)
-                ?: if (registeredDni.isNotBlank() && code.trim() == registeredDni && password == registeredPassword) UserRole.Passenger else null
             if (role != null) onSuccess(role) else invalid = true
         }, Modifier.testTag("submitLogin"), R.drawable.ic_arrow_forward)
-        SecondaryAction(stringResource(R.string.create_account), onRegister, Modifier.testTag("loginRegister"))
         Notice(stringResource(R.string.company_access), icon = R.drawable.ic_shield)
     }
 }

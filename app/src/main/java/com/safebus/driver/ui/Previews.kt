@@ -26,9 +26,6 @@ private fun PendingPreview() { SafeBusTheme(false) { Surface { EmergencyScreen(E
 @Composable
 private fun AppPreview() { SafeBusApp() }
 
-@Preview(name = "Passenger · Light", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PassengerPreview() { SafeBusTheme(false) { PassengerApp("en", {}, {}) } }
 
 @Preview(name = "Supervisor · Dark", showBackground = true, widthDp = 390, heightDp = 844)
 @Preview(name = "Supervisor · Large text", showBackground = true, widthDp = 390, heightDp = 844, fontScale = 2f)

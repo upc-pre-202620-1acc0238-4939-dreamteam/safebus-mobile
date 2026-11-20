@@ -21,35 +21,6 @@ class RoleFlowsTest {
         compose.onNodeWithTag("loginPassword").performTextInput(password)
         click("submitLogin", true)
     }
-    private fun journey() {
-        signIn("76543210")
-        compose.onNodeWithTag("navBusAlerts").assertIsNotEnabled()
-        compose.onNodeWithTag("navShift").assertDoesNotExist()
-        compose.onNodeWithTag("navFleet").assertDoesNotExist()
-        screenshot("passenger-journey-empty")
-        click("scanBusQr", true)
-        click("invalidQr", true)
-        compose.onNodeWithTag("qrError").assertExists()
-        click("validQr", true)
-        screenshot("passenger-bus-verified")
-        click("startJourney", true)
-        compose.onNodeWithTag("navBusAlerts").assertIsEnabled()
-    }
-    private fun request() {
-        click("newRequest", true)
-        compose.onNodeWithTag("reviewRequest").assertIsNotEnabled()
-        compose.onNodeWithTag("incidentMessage").performTextInput("Sample incident at the rear door.")
-        compose.onNodeWithTag("reviewRequest").assertIsNotEnabled()
-        click("chooseEvidence", true)
-        click("useInvalidEvidence")
-        compose.onNodeWithTag("invalidEvidence").assertExists()
-        click("chooseEvidence", true)
-        click("useSampleEvidence")
-        screenshot("passenger-request-form")
-        click("reviewRequest", true)
-        screenshot("passenger-request-review")
-        click("sendRequest", true)
-    }
     private fun screenshot(name: String) {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -61,94 +32,20 @@ class RoleFlowsTest {
         bitmap.recycle()
     }
 
+    @Test fun passengerAccountAndRegistrationAreUnavailableInThePrototype() {
+        compose.onNodeWithTag("welcomeRegister").assertDoesNotExist()
+        signIn("76543210")
+        compose.onNodeWithTag("loginError").assertExists()
+        compose.onNodeWithTag("loginRegister").assertDoesNotExist()
+        compose.onNodeWithTag("navJourney").assertDoesNotExist()
+        compose.onNodeWithTag("navFleet").assertDoesNotExist()
+    }
     @Test fun loginDoesNotAdvertiseAnyDemoAccount() {
         click("welcomeLogin", true)
         listOf("conductor.demo", "76543210", "supervisor.demo", "SafeBus123").forEach {
             compose.onNodeWithText(it, substring = true).assertDoesNotExist()
         }
         screenshot("login-clean")
-    }
-
-    @Test fun passengerRequestRequiresEvidenceAndRemainsAfterJourneyEnds() {
-        journey()
-        screenshot("passenger-journey-active")
-        click("navBusAlerts")
-        compose.onNodeWithText("Reports a lost transit card", substring = true).assertDoesNotExist()
-        compose.onNodeWithText("Sample evidence", substring = true).assertDoesNotExist()
-        screenshot("passenger-bus-alerts")
-        click("busFilterFinished", true)
-        compose.onNodeWithTag("emptyBusAlerts").assertExists()
-        click("navJourney")
-        request()
-        compose.onNodeWithTag("passengerStatusCollecting").assertExists()
-        screenshot("passenger-requests-collecting")
-        compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("passengerStatusCollecting").assertExists()
-        click("navJourney")
-        click("endJourney", true)
-        click("cancelEndJourney")
-        compose.onNodeWithTag("activeJourney").assertExists()
-        click("endJourney", true)
-        click("confirmEndJourney")
-        compose.onNodeWithTag("journeyEnded").assertExists()
-        compose.onNodeWithTag("navBusAlerts").assertIsNotEnabled()
-        screenshot("passenger-journey-ended")
-        click("endedRequests", true)
-        click("requestDetails", true)
-        compose.onNodeWithText("Sample incident at the rear door.").assertExists()
-        screenshot("passenger-request-detail")
-    }
-
-    @Test fun passengerOfflineRecoveryAndAutomaticCompletionAreSimulated() {
-        journey()
-        click("navAccount")
-        click("passengerConnection", true)
-        click("passengerLocation", true)
-        click("navJourney")
-        request()
-        compose.onNodeWithTag("passengerStatusPending").assertExists()
-        screenshot("passenger-request-pending")
-        click("navAccount")
-        click("passengerConnection", true)
-        click("navRequests")
-        compose.onNodeWithTag("passengerStatusCollecting").assertExists()
-        click("navAccount")
-        click("requestStateAwaitingApproval", true)
-        click("navRequests")
-        compose.onNodeWithTag("passengerStatusAwaitingApproval").assertExists()
-        screenshot("passenger-request-awaiting")
-        click("navAccount")
-        click("requestStateClosed", true)
-        click("simulateAway", true)
-        compose.onNodeWithTag("journeyEnded").assertExists()
-        click("endedRequests", true)
-        click("requestsFilterFinished", true)
-        compose.onNodeWithTag("passengerStatusClosed").assertExists()
-        screenshot("passenger-request-closed")
-    }
-
-    @Test fun passengerRegistrationValidatesStepsAndAllowsSessionLogin() {
-        click("welcomeRegister", true)
-        compose.onNodeWithTag("registrationNext").assertIsNotEnabled()
-        compose.onNodeWithTag("registrationDni").performTextInput("76543210")
-        click("registrationNext", true)
-        compose.onNodeWithTag("duplicateDni").assertExists()
-        compose.onNodeWithTag("registrationDni").performTextReplacement("12345678")
-        screenshot("passenger-register-dni")
-        click("registrationNext", true)
-        click("registrationPhoto", true)
-        screenshot("passenger-register-photo")
-        click("registrationNext", true)
-        compose.onNodeWithTag("createPassenger").assertIsNotEnabled()
-        compose.onNodeWithTag("registrationPassword").performTextInput("Example123")
-        compose.onNodeWithTag("createPassenger").assertIsNotEnabled()
-        click("acceptTerms", true)
-        screenshot("passenger-register-terms")
-        click("createPassenger", true)
-        compose.onNodeWithTag("accountCreated").assertExists()
-        click("registrationLogin", true)
-        signIn("12345678", "Example123", welcome = false)
-        compose.onNodeWithTag("scanBusQr").assertExists()
     }
 
     @Test fun supervisorFleetSearchFiltersMapAndCapacityWorkLocally() {

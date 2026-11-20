@@ -96,8 +96,8 @@ fun SegmentAccountScreen(role: UserRole, language: String, onLanguage: (String) 
     ScreenContent {
         InfoCard {
             Symbol(R.drawable.ic_account_circle, Modifier.size(32.dp))
-            Text(stringResource(if (role == UserRole.Passenger) R.string.passenger_name else R.string.supervisor_name), style = MaterialTheme.typography.titleLarge)
-            Text(stringResource(if (role == UserRole.Passenger) R.string.passenger_role else R.string.supervisor_role), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.supervisor_name), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(if (role == UserRole.Driver) R.string.driver_role else R.string.supervisor_role), style = MaterialTheme.typography.bodyLarge)
             if (role == UserRole.Supervisor) Text(stringResource(R.string.service_company), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.profile_mock), style = MaterialTheme.typography.bodySmall)
         }

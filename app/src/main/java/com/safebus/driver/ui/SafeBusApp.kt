@@ -44,8 +44,6 @@ fun SafeBusApp() {
 private fun SafeBusPrototype(language: String, onLanguage: (String) -> Unit) {
     var page by rememberSaveable { mutableStateOf(Page.Welcome) }
     var role by rememberSaveable { mutableStateOf<UserRole?>(null) }
-    var registeredDni by rememberSaveable { mutableStateOf("") }
-    var registeredPassword by rememberSaveable { mutableStateOf("") }
     var shift by rememberSaveable { mutableStateOf(ShiftState.Assigned) }
     var emergency by rememberSaveable { mutableStateOf<EmergencyState?>(null) }
     var connected by rememberSaveable { mutableStateOf(true) }
@@ -81,27 +79,14 @@ private fun SafeBusPrototype(language: String, onLanguage: (String) -> Unit) {
         emptyHistory = false
         page = Page.Welcome
     }
-    if (role == UserRole.Passenger) {
-        PassengerApp(language, onLanguage, onSignOut = { reset() })
-        return
-    }
     if (role == UserRole.Supervisor) {
         SupervisorApp(language, onLanguage, onSignOut = { reset() })
-        return
-    }
-    if (page == Page.Register) {
-        RegistrationScreen(onCancel = { page = Page.Welcome }, onComplete = { dni, password ->
-            registeredDni = dni
-            registeredPassword = password
-            page = Page.Login
-        })
         return
     }
     BackHandler(enabled = page != Page.Welcome && page != Page.Shift) { goBack() }
     val title = when (page) {
         Page.Welcome -> R.string.welcome
         Page.Login -> R.string.sign_in
-        Page.Register -> R.string.create_account
         Page.Shift -> R.string.my_shift
         Page.Scanner -> R.string.scan_driver_qr
         Page.Validated -> R.string.shift_validated
@@ -164,9 +149,8 @@ private fun SafeBusPrototype(language: String, onLanguage: (String) -> Unit) {
         Box(Modifier.padding(insets).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             Box(Modifier.widthIn(max = 600.dp).fillMaxSize()) {
                 when (page) {
-                    Page.Welcome -> WelcomeScreen(language, onLanguage, onLogin = { page = Page.Login }, onRegister = { page = Page.Register })
-                    Page.Login -> LoginScreen(onSuccess = { role = it; page = Page.Shift }, onRegister = { page = Page.Register }, registeredDni, registeredPassword)
-                    Page.Register -> Unit
+                    Page.Welcome -> WelcomeScreen(language, onLanguage, onLogin = { page = Page.Login })
+                    Page.Login -> LoginScreen(onSuccess = { role = it; page = Page.Shift })
                     Page.Shift -> ShiftScreen(shift, onScan = { page = Page.Scanner },
                         onRefresh = { shift = ShiftState.Assigned }, onClose = { showCloseShift = true })
                     Page.Scanner -> ScannerScreen(onCancel = { page = Page.Shift }, onValid = { shift = ShiftState.Active; page = Page.Validated })

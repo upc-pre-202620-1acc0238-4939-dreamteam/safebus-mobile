@@ -3,17 +3,15 @@ package com.safebus.driver.ui
 import com.dreamteam.safebus.R
 import com.safebus.driver.ui.theme.SafeBusColors
 
-enum class Page { Welcome, Login, Register, Shift, Scanner, Validated, Alerts, Account, Emergency, Details, HistoryDetails }
-enum class UserRole { Driver, Passenger, Supervisor }
+enum class Page { Welcome, Login, Shift, Scanner, Validated, Alerts, Account, Emergency, Details, HistoryDetails }
+enum class UserRole { Driver, Supervisor }
 
 /** Local fixtures only. Credentials are documented in README, never advertised in the UI. */
 object MockAccounts {
-    const val PassengerCode = "76543210"
     fun roleFor(code: String, password: String): UserRole? {
         if (password != MockDriver.Password) return null
         return when (code.trim()) {
             MockDriver.Code -> UserRole.Driver
-            PassengerCode -> UserRole.Passenger
             "supervisor.demo" -> UserRole.Supervisor
             else -> null
         }
