@@ -1,6 +1,7 @@
 package com.dreamteam.safebus.iam.data
 
 import com.dreamteam.safebus.iam.domain.AuthRepository
+import com.dreamteam.safebus.iam.domain.Role
 import com.dreamteam.safebus.iam.domain.Session
 import com.dreamteam.safebus.shared.data.*
 import com.dreamteam.safebus.shared.domain.*
@@ -41,6 +42,11 @@ class RemoteAuthRepository(private val service: AuthService, private val store: 
     override suspend fun restore(): DomainResult<Session?> = withContext(dispatcher) {
         try {
             val saved = store.read(key)?.let(SessionRecordCodec::decode)
+            if (saved?.role == Role.PASSENGER) {
+                store.remove(key)
+                mutableSession.value = null
+                return@withContext DomainResult.Error(Failure(FailureKind.FORBIDDEN, "ANDROID_ROLE_UNSUPPORTED"))
+            }
             val valid = saved?.takeIf { it.validAt(clock.instant()) }
             if (saved != null && valid == null) store.remove(key)
             mutableSession.value = valid
@@ -55,6 +61,11 @@ class RemoteAuthRepository(private val service: AuthService, private val store: 
         when (val result = service.signIn(loginId, password)) {
             is DomainResult.Error -> result
             is DomainResult.Success -> try {
+                if (result.value.role == Role.PASSENGER) {
+                    store.remove(key)
+                    mutableSession.value = null
+                    return@withContext DomainResult.Error(Failure(FailureKind.FORBIDDEN, "ANDROID_ROLE_UNSUPPORTED"))
+                }
                 store.write(key, SessionRecordCodec.encode(result.value))
                 mutableSession.value = result.value
                 result

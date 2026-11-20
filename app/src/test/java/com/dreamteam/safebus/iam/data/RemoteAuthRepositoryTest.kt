@@ -30,6 +30,25 @@ class RemoteAuthRepositoryTest {
     }
     private fun repository(at: Instant = now) = RemoteAuthRepository(service, store, "https://example.com", Clock.fixed(at, ZoneOffset.UTC), Dispatchers.Unconfined)
 
+    @Test fun rejectsPassengerLoginAndRestoredSessionsWithoutPersistingThem() = runBlocking {
+        val passenger = account.copy(role = Role.PASSENGER, companyId = null)
+        answer = DomainResult.Success(passenger)
+        val repo = repository()
+        assertEquals("ANDROID_ROLE_UNSUPPORTED", (repo.signIn("passenger", "password") as DomainResult.Error).failure.code)
+        assertNull(repo.session.value)
+        assertTrue(store.values.isEmpty())
+        store.write("session:https://example.com", SessionRecordCodec.encode(passenger))
+        assertEquals("ANDROID_ROLE_UNSUPPORTED", (repo.restore() as DomainResult.Error).failure.code)
+        assertNull(repo.session.value)
+        assertTrue(store.values.isEmpty())
+    }
+    @Test fun permitsBothStaffRoles() = runBlocking {
+        for (role in listOf(Role.DRIVER, Role.SUPERVISOR)) {
+            answer = DomainResult.Success(account.copy(role = role))
+            assertEquals(role, (repository().signIn("staff", "password") as DomainResult.Success).value.role)
+            assertEquals(role, (repository().restore() as DomainResult.Success).value?.role)
+        }
+    }
     @Test fun storesOnlySuccessfulSessionsAndRestoresUntilExpiry() = runBlocking {
         val repo = repository()
         assertEquals(account, (repo.signIn("driver", "password") as DomainResult.Success).value)
