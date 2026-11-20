@@ -5,8 +5,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.dreamteam.safebus.fleet.data.RemoteFleetRepository
 import com.dreamteam.safebus.fleet.domain.FleetChange
 import com.dreamteam.safebus.iam.data.*
-import com.dreamteam.safebus.passenger.data.*
-import com.dreamteam.safebus.passenger.domain.*
 import com.dreamteam.safebus.safetycase.data.*
 import com.dreamteam.safebus.shared.data.*
 import com.dreamteam.safebus.shared.domain.*
@@ -21,7 +19,6 @@ import org.junit.Test
 import java.io.IOException
 import java.time.Instant
 import java.util.UUID
-import kotlin.random.Random
 
 class BackendIntegrationTest {
     internal class MemoryStore : SecureStore {
@@ -42,7 +39,6 @@ class BackendIntegrationTest {
         val outbox = Outbox(store, UUID.randomUUID().toString(), PendingTransport { api.call("POST", it.path, it.body, it.contentType) {} })
         val fleet = RemoteFleetRepository(api)
         val trip = RemoteTripRepository(HttpTripService(api, outbox), store, "test")
-        val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, "test")
         val safety = RemoteSafetyRepository(api, outbox, store, "test")
         val events = SupervisorEvents(endpoint, { authToken() }, { invalidate(it) })
     }
@@ -50,14 +46,55 @@ class BackendIntegrationTest {
         is DomainResult.Success -> result.value
         is DomainResult.Error -> throw AssertionError("Backend failure: ${result.failure.kind}/${result.failure.code}")
     }
-    private fun photo(color: Int): Photo {
-        val bitmap = Bitmap.createBitmap(16, 16, Bitmap.Config.ARGB_8888).apply { eraseColor(color) }
+    @Test fun supervisorModeratesExternalPassengerReportsWhileAndroidRejectsTheirLogin() = runBlocking {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("backend") == "true")
+        val endpoint = "http://10.0.2.2:8080"
+        val supervisor = Client(endpoint)
+        value(supervisor.auth.signIn("sup-001", "Safebus2024!"))
+        val suffix = UUID.randomUUID().toString().take(8)
+        val bus = value(supervisor.fleet.save(FleetChange.Bus("EXT-$suffix")))
+        val driver = value(supervisor.fleet.save(FleetChange.Driver("External reports driver", "ext-$suffix", "Integration2026!")))
+        val route = value(supervisor.fleet.save(FleetChange.Route("External reports route", "A", "B")))
+        val assignment = value(supervisor.fleet.save(FleetChange.Assignment(driver.id, bus.id, route.id, Instant.now().minusSeconds(60), Instant.now().plusSeconds(3600))))
+        val conductor = Client(endpoint)
+        value(conductor.auth.signIn("ext-$suffix", "Integration2026!"))
+        val shift = value(conductor.trip.activate(assignment.id, requireNotNull(driver.credential)))
+        val bitmap = Bitmap.createBitmap(16, 16, Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.RED) }
         val output = java.io.ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, output); bitmap.recycle()
-        return Photo(output.toByteArray(), "image/png")
+        val image = output.toByteArray()
+        val requests = List(3) {
+            var externalToken: String? = null
+            val external = ApiClient(endpoint, true, { externalToken }, {}, UrlConnectionEngine())
+            val dni = kotlin.random.Random.nextInt(10_000_000, 99_999_999).toString()
+            val registration = multipart(mapOf("dni" to dni, "password" to "Integration2026!", "termsAccepted" to "true", "termsVersion" to "2026-10"), "facePhoto", image, "image/png")
+            value(external.call("POST", "/api/v1/passengers", registration.bytes, registration.contentType, authenticated = false) {})
+            externalToken = value(HttpAuthService(external).signIn(dni, "Integration2026!")).accessToken
+            val android = Client(endpoint)
+            assertEquals("ANDROID_ROLE_UNSUPPORTED", (android.auth.signIn(dni, "Integration2026!") as DomainResult.Error).failure.code)
+            assertNull(android.auth.session.value)
+            assertTrue(android.store.data.isEmpty())
+            val journeyId = value(external.call("POST", "/api/v1/journeys", jsonBody("busQrCode" to bus.credential), "application/json") { it.json().getLong("journeyId") })
+            val id = UUID.randomUUID().toString()
+            val report = multipart(mapOf("id" to id, "journeyId" to journeyId.toString(), "message" to "Report from external passenger client", "activatedAt" to Instant.now().toString()), "photo", image, "image/png")
+            value(external.call("POST", "/api/v1/passenger-requests", report.bytes, report.contentType) {})
+            id
+        }
+        val group = value(supervisor.safety.queue()).groups.single { it.busId == bus.id }
+        assertEquals(3, group.contributors)
+        assertEquals(requests.toSet(), group.requests.map { it.id }.toSet())
+        assertArrayEquals(image, value(supervisor.safety.evidence(requests.first())).bytes)
+        value(supervisor.safety.approve(group.id))
+        val emergency = value(supervisor.safety.queue()).emergencies.single { it.busId == bus.id }
+        assertEquals("HIGH", emergency.priority)
+        value(supervisor.safety.attend(emergency.id))
+        value(supervisor.safety.close(emergency.id, "Resolved", "Attended by company"))
+        assertTrue(value(supervisor.safety.queue()).emergencies.none { it.id == emergency.id })
+        value(conductor.trip.close(shift))
+        value(conductor.auth.signOut()); value(supervisor.auth.signOut())
     }
 
-    @Test fun completeBackendLifecycleWithPrivateEvidenceOfflineRetryAndRoleIsolation() = runBlocking {
+    @Test fun staffBackendLifecycleWithOfflineRetryAndRoleIsolation() = runBlocking {
         val args = InstrumentationRegistry.getArguments()
         assumeTrue("Run against an isolated development backend with -e backend true", args.getString("backend") == "true")
         val endpoint = args.getString("backendUrl") ?: "http://10.0.2.2:8080"
@@ -105,66 +142,9 @@ class BackendIntegrationTest {
         value(supervisor.safety.close(panic.id, "Driver safe", "Resolved by company"))
         assertEquals("CLOSED", value(conductor.safety.driverAlerts()).single { it.id == panic.id }.status)
 
-        val face = photo(android.graphics.Color.GREEN)
-        val evidence = photo(android.graphics.Color.RED)
-        val passengers = List(3) { Client(endpoint) }
-        val journeys = passengers.map { client ->
-            val dni = Random.nextInt(10_000_000, 99_999_999).toString()
-            val registration = Registration(dni, "Integration2026!", true, face)
-            value(client.passenger.register(registration))
-            assertTrue(client.passenger.register(registration) is DomainResult.Error)
-            assertNull(client.auth.session.value); assertTrue(client.store.data.isEmpty())
-            value(client.auth.signIn(dni, "Integration2026!"))
-            val qr = BusQr.parse(BusQr(requireNotNull(bus.credential), bus.id).encoded())
-            val journey = value(client.passenger.start(qr))
-            assertEquals(journey.id, value(client.passenger.start(qr)).id)
-            assertEquals(bus.id, journey.busId)
-            assertEquals(-12.0464, value(client.passenger.location(bus.id)).latitude, 0.00001)
-            journey
-        }
-        val requests = passengers.mapIndexed { index, client -> value(client.safety.request(journeys[index].id, "Private incident $index", evidence)) }
-        val duplicate = passengers[0].safety.request(journeys[0].id, "Duplicate contribution", evidence)
-        assertEquals(FailureKind.CONFLICT, (duplicate as DomainResult.Error).failure.kind)
-        assertEquals(0, value(passengers[0].outbox.count()))
-        assertEquals(1, value(passengers[0].safety.mine()).size)
-        assertEquals(FailureKind.FORBIDDEN, (passengers[1].safety.evidence(requests[0].id, false) as DomainResult.Error).failure.kind)
-        assertEquals(1, value(passengers[1].safety.mine()).size)
-        assertArrayEquals(evidence.bytes, value(passengers[0].safety.evidence(requests[0].id, false)).bytes)
-        val group = value(supervisor.safety.queue()).groups.single { it.busId == bus.id }
-        assertEquals(3, group.contributors)
-        assertArrayEquals(evidence.bytes, value(supervisor.safety.evidence(requests[0].id, true)).bytes)
-        assertTrue(value(passengers[0].safety.history(bus.id)).isNotEmpty())
-        value(supervisor.safety.approve(group.id))
-        val high = value(supervisor.safety.queue()).emergencies.single { it.busId == bus.id }
-        assertEquals("HIGH", high.priority)
-        value(supervisor.safety.attend(high.id))
-        value(supervisor.safety.close(high.id, "Case resolved", "Passengers safe"))
-        assertEquals("CLOSED", value(passengers[0].safety.mine()).single().status)
-        assertEquals("Passengers safe", value(passengers[0].safety.mine()).single().response)
-
-        passengers.forEachIndexed { index, client -> value(client.safety.request(journeys[index].id, "Second incident $index", evidence)) }
-        val declinedGroup = value(supervisor.safety.queue()).groups.single { it.busId == bus.id }
-        value(supervisor.safety.decline(declinedGroup.id, "No active threat", "Reviewed by company"))
-        assertTrue(value(passengers[0].safety.mine()).any { it.status == "NOT_APPROVED" && it.response == "Reviewed by company" })
-
-        passengers[0].offline = true
-        assertEquals(Delivery.PENDING, value(passengers[0].passenger.end(journeys[0], EndReason.MANUAL)))
-        assertNull(value(passengers[0].passenger.restore()))
-        passengers[0].offline = false
-        assertEquals(0, value(passengers[0].outbox.flush()))
-        assertEquals(2, value(passengers[0].safety.mine()).size)
-        assertEquals(requests[0].id, value(passengers[0].safety.detail(requests[0].id)).id)
-        assertEquals(FailureKind.FORBIDDEN, (passengers[1].safety.detail(requests[0].id) as DomainResult.Error).failure.kind)
-        assertEquals(2, value(passengers[1].safety.mine()).size)
-        val reserved = passengers[0].api.call("GET", "/api/v1/passenger-requests/mine/photo") {}
-        assertEquals(FailureKind.FORBIDDEN, (reserved as DomainResult.Error).failure.kind)
-        assertEquals(2, value(passengers[0].safety.mine()).size)
-        assertEquals(FailureKind.FORBIDDEN, (passengers[0].safety.history(bus.id) as DomainResult.Error).failure.kind)
-        assertNull(value(passengers[0].passenger.restore()))
         value(conductor.trip.close(shift))
         assertNull(value(conductor.trip.restore()))
         assertNull(value(supervisor.fleet.overview()).buses.single { it.id == bus.id }.shiftId)
-        passengers.forEach { value(it.auth.signOut()); assertNull(it.auth.session.value) }
         value(conductor.auth.signOut()); value(supervisor.auth.signOut())
     }
 }

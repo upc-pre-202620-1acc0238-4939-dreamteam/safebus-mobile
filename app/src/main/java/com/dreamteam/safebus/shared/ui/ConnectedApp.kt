@@ -29,7 +29,6 @@ import com.dreamteam.safebus.fleet.ui.*
 import com.dreamteam.safebus.fleet.domain.FleetBus
 import com.dreamteam.safebus.iam.domain.Role
 import com.dreamteam.safebus.iam.ui.AccessScreen
-import com.dreamteam.safebus.passenger.ui.JourneyScreen
 import com.dreamteam.safebus.safetycase.data.LiveEvent
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.LocationTrackingService
@@ -41,14 +40,13 @@ import kotlinx.coroutines.delay
 
 enum class Destination(val label: Int, val icon: Int) {
     SHIFT(R.string.core_shift, R.drawable.ic_directions_bus), DRIVER_ALERTS(R.string.core_my_alerts, R.drawable.ic_warning),
-    JOURNEY(R.string.core_journey, R.drawable.ic_directions_bus), HISTORY(R.string.core_bus_alerts, R.drawable.ic_shield),
-    REQUESTS(R.string.core_my_requests, R.drawable.ic_history), FLEET(R.string.core_fleet, R.drawable.ic_map),
+    FLEET(R.string.core_fleet, R.drawable.ic_map),
     EMERGENCIES(R.string.core_emergencies, R.drawable.ic_warning), REVIEWS(R.string.core_reviews, R.drawable.ic_fact_check),
     ASSIGNMENTS(R.string.core_assignments, R.drawable.ic_assignment), ACCOUNT(R.string.core_account, R.drawable.ic_account_circle)
 }
 fun destinations(role: Role): List<Destination> = when (role) {
     Role.DRIVER -> listOf(Destination.SHIFT, Destination.DRIVER_ALERTS, Destination.ACCOUNT)
-    Role.PASSENGER -> listOf(Destination.JOURNEY, Destination.HISTORY, Destination.REQUESTS, Destination.ACCOUNT)
+    Role.PASSENGER -> emptyList()
     Role.SUPERVISOR -> listOf(Destination.FLEET, Destination.EMERGENCIES, Destination.REVIEWS, Destination.ASSIGNMENTS, Destination.ACCOUNT)
 }
 fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driver; Role.PASSENGER -> R.string.core_role_passenger; Role.SUPERVISOR -> R.string.core_role_supervisor }
@@ -101,7 +99,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                 val service by current.serviceModel.state.collectAsState()
                 LaunchedEffect(current) { current.serviceModel.restore() }
                 Scaffold { padding -> Box(Modifier.padding(padding)) { ContactScreen(service, current.serviceModel::submit, current.serviceModel::clear, current.serviceModel::health, { contact = false }) } }
-            } else if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, current.authModel::register, { settings = true }, { contact = true }, language, onLanguage) } }
+            } else if (session == null) Scaffold { padding -> Box(Modifier.padding(padding)) { AccessScreen(auth, current.authModel::signIn, { settings = true }, { contact = true }, language, onLanguage) } }
             else key(session.accessToken) {
                 val account = remember { current.bind(session) }
                 AccountWorkspace(application, account, lifecycle, language, onLanguage) {
@@ -132,21 +130,16 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
 @Composable private fun AccountWorkspace(application: SafeBusApplication, account: AccountScope, lifecycle: Lifecycle, language: String, onLanguage: (String) -> Unit, signOut: () -> Unit) {
     val tabs = destinations(account.session.role)
     var tab by rememberSaveable { mutableStateOf(tabs.first()) }
-    var requestForm by rememberSaveable { mutableStateOf(false) }
     var selectedBus by remember { mutableStateOf<FleetBus?>(null) }
-    var requestDetail by remember { mutableStateOf<String?>(null) }
     var foreground by remember { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) }
     var connected by remember { mutableStateOf(false) }
     val trip by account.tripModel.state.collectAsState()
-    val passenger by account.passengerModel.state.collectAsState()
     val safety by account.safetyModel.state.collectAsState()
-    val history by account.historyModel.state.collectAsState()
     val fleet by account.fleetModel.state.collectAsState()
     val panic by account.panicModel.state.collectAsState()
     val sync by account.syncModel.state.collectAsState()
     val tracking by account.tracking.collectAsState()
     val shift by account.shift.collectAsState()
-    val journey by account.journey.collectAsState()
 
     fun startLocation() {
         val permitted = application.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
@@ -171,22 +164,18 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         account.syncModel.count()
         when (account.session.role) {
             Role.DRIVER -> account.tripModel.refresh()
-            Role.PASSENGER -> account.passengerModel.restore()
+            Role.PASSENGER -> Unit
             Role.SUPERVISOR -> { account.fleetModel.refresh(); account.safetyModel.review() }
         }
     }
-    LaunchedEffect(shift?.id, journey?.id, foreground) {
-        if (foreground && (shift != null || journey != null)) startLocation()
-        if (shift == null && journey == null) application.stopService(Intent(application, LocationTrackingService::class.java))
-        if (journey == null && tab == Destination.HISTORY) tab = Destination.JOURNEY
+    LaunchedEffect(shift?.id, foreground) {
+        if (foreground && shift != null) startLocation()
+        if (shift == null) application.stopService(Intent(application, LocationTrackingService::class.java))
     }
-    LaunchedEffect(journey?.id) { account.historyModel.clearHistory() }
     fun refresh() {
         when (tab) {
             Destination.SHIFT -> account.tripModel.refresh()
             Destination.DRIVER_ALERTS -> account.safetyModel.alerts()
-            Destination.REQUESTS -> account.safetyModel.requests()
-            Destination.HISTORY -> account.historyModel.history(journey?.busId)
             Destination.FLEET -> account.fleetModel.refresh()
             Destination.EMERGENCIES, Destination.REVIEWS -> account.safetyModel.review()
             else -> Unit
@@ -203,11 +192,11 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         if (foreground) while (true) {
             account.syncModel.retry()
             delay(15_000)
-            if (!requestForm && tab != Destination.SHIFT) refresh()
+            if (tab != Destination.SHIFT) refresh()
         }
     }
-    BackHandler(requestForm || selectedBus != null || requestDetail != null || tab != tabs.first()) {
-        when { selectedBus != null -> selectedBus = null; requestDetail != null -> { requestDetail = null; account.requestDetailModel.clear() }; requestForm -> requestForm = false; else -> tab = tabs.first() }
+    BackHandler(selectedBus != null || tab != tabs.first()) {
+        if (selectedBus != null) selectedBus = null else tab = tabs.first()
     }
     Scaffold(bottomBar = {
         Column {
@@ -225,8 +214,8 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                     Destination.REVIEWS -> safety.value.queue?.groups?.size ?: 0
                     else -> 0
                 }
-                NavigationBarItem(selected = tab == destination, onClick = { tab = destination; requestForm = false; selectedBus = null; requestDetail = null; account.requestDetailModel.clear(); account.safetyModel.clearEvidence() },
-                    enabled = destination != Destination.HISTORY || journey != null, modifier = Modifier.testTag("nav:${destination.name}"),
+                NavigationBarItem(selected = tab == destination, onClick = { tab = destination; selectedBus = null; account.safetyModel.clearEvidence() },
+                    modifier = Modifier.testTag("nav:${destination.name}"),
                     icon = { BadgedBox(badge = { if (badgeCount > 0) Badge(containerColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_pending else R.color.core_emergency),
                         contentColor = colorResource(if (destination == Destination.REVIEWS) R.color.core_text else R.color.core_white)) { Text(badgeCount.toString()) } }) { CoreIcon(destination.icon) } },
                     colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.onSecondary, selectedTextColor = MaterialTheme.colorScheme.onPrimary,
@@ -242,31 +231,19 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
             Box(Modifier.weight(1f)) {
                 when {
                     selectedBus != null -> CountingWorkspace(account, selectedBus!!, foreground) { selectedBus = null }
-                    requestDetail != null -> {
-                        val detail by account.requestDetailModel.state.collectAsState()
-                        val id = requestDetail!!
-                        LaunchedEffect(id) { account.requestDetailModel.load(id) }
-                        RequestDetailScreen(detail, { account.requestDetailModel.load(id) }, { requestDetail = null; account.requestDetailModel.clear() })
-                    }
-                    requestForm && journey != null -> RequestFormScreen(safety, { message, photo -> account.safetyModel.submit(journey?.id, message, photo) }, { requestForm = false; tab = Destination.REQUESTS })
                     tab == Destination.SHIFT -> TripScreen(trip, tracking, account.tripModel::refresh, account.tripModel::activate, account.tripModel::close, requestPermission)
-                    tab == Destination.JOURNEY -> JourneyScreen(passenger, tracking, account.passengerModel::start, account.passengerModel::end, { account.safetyModel.clearReceipt(); requestForm = true }, requestPermission)
                     tab == Destination.FLEET -> FleetScreen(fleet, account.fleetModel::refresh) { selectedBus = it }
                     tab == Destination.ASSIGNMENTS -> ProvisionScreen(fleet, account.fleetModel::save, account.fleetModel::clearReceipt)
                     tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, sync, account.syncModel::retry, signOut, language, onLanguage)
-                    tab == Destination.HISTORY && journey == null -> CorePage(R.string.core_bus_alerts) { Text(stringResource(R.string.core_history_requires_journey)) }
                     else -> {
                         val mode = when (tab) {
                             Destination.DRIVER_ALERTS -> SafetyTab.DRIVER_ALERTS
-                            Destination.REQUESTS -> SafetyTab.REQUESTS
-                            Destination.HISTORY -> SafetyTab.HISTORY
                             Destination.EMERGENCIES -> SafetyTab.EMERGENCIES
                             else -> SafetyTab.REVIEWS
                         }
-                        SafetyListScreen(if (tab == Destination.HISTORY) history else safety, mode, ::refresh,
-                            { account.safetyModel.evidence(it, account.session.role == Role.SUPERVISOR) }, account.safetyModel::clearEvidence,
-                            account.safetyModel::approve, account.safetyModel::decline, account.safetyModel::attend, account.safetyModel::close,
-                            if (mode == SafetyTab.REQUESTS) { id -> requestDetail = id } else null)
+                        SafetyListScreen(safety, mode, ::refresh,
+                            account.safetyModel::evidence, account.safetyModel::clearEvidence,
+                            account.safetyModel::approve, account.safetyModel::decline, account.safetyModel::attend, account.safetyModel::close)
                     }
                 }
             }

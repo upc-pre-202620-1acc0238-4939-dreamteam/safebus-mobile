@@ -24,7 +24,7 @@ class SpanishResourcesTest {
             }
         }
     }
-    @Test fun defaultAndSpanishResourcesKeepRecoveryGuidanceAndVersionMeaning() {
+    @Test fun defaultAndSpanishResourcesKeepRecoveryGuidanceAndStaffScope() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         for (language in listOf("en-US", "es-PE")) {
             val configuration = Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag(language)) }
@@ -32,16 +32,15 @@ class SpanishResourcesTest {
             val spanish = language.startsWith("es")
             assertEquals(if (spanish) "Demasiados intentos. Espere un instante antes de volver a intentar." else "Too many attempts. Wait a moment before trying again.", localized.getString(R.string.core_rate_limit))
             assertEquals(if (spanish) "Actualmente no tiene un turno asignado." else "You currently have no assigned shift.", localized.getString(R.string.core_no_assignment))
-            assertEquals(if (spanish) "Actualmente este bus no tiene un turno activo." else "This bus currently has no active shift.", localized.getString(R.string.core_bus_not_serving))
             assertEquals(if (spanish) "Turno activo: 42" else "Active shift: 42", localized.getString(R.string.core_active_shift, 42L))
-            assertTrue(localized.getString(R.string.core_terms).endsWith(if (spanish) "versión de octubre de 2026." else "October 2026 version."))
+            assertEquals(if (spanish) "Para supervisores y conductores" else "For supervisors and drivers", localized.getString(R.string.ui_staff_app))
         }
     }
-    @Test fun spanishContextExplainsCredentialAndJourneyFailures() {
+    @Test fun spanishContextExplainsCredentialsAndStaffAccess() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val configuration = Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag("es-PE")) }
         val localized = context.createConfigurationContext(configuration)
         assertEquals("La credencial QR venció. Solicite una nueva a su empresa.", localized.getString(R.string.core_credential_expired))
-        assertTrue(localized.getString(R.string.core_existing_journey).contains("viaje activo"))
+        assertTrue(localized.getString(R.string.ui_staff_only).contains("Flutter"))
     }
 }

@@ -15,8 +15,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.dreamteam.safebus.iam.ui.*
 import com.dreamteam.safebus.fleet.ui.*
 import com.dreamteam.safebus.fleet.domain.*
-import com.dreamteam.safebus.passenger.ui.*
-import com.dreamteam.safebus.passenger.domain.Journey
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.safetycase.domain.*
 import com.dreamteam.safebus.shared.domain.*
@@ -42,7 +40,7 @@ class ReportLayoutsTest {
         assertTrue(file.length() > 0)
     }
     @Test fun welcomeAndLoginMatchReportStructure() {
-        show { AccessScreen(ScreenState(AuthState()), { _, _ -> }, {}, {}) }
+        show { AccessScreen(ScreenState(AuthState()), { _, _ -> }, {}) }
         compose.onNodeWithTag("language:en").assertIsSelected()
         compose.onNodeWithTag("welcomeLogin").assertIsDisplayed()
         capture("welcome")
@@ -57,13 +55,6 @@ class ReportLayoutsTest {
         compose.onNodeWithTag("closeShift").assertExists()
         capture("shift")
     }
-    @Test fun passengerUnitKeepsServerIdentityInDarkTheme() {
-        val journey = Journey(1, 1, "ABC-123", "Transport Company", "VERIFIED", "Route 301", "San Juan", "Centro", "Ana Perez", Instant.EPOCH)
-        show(true) { JourneyScreen(ScreenState(PassengerState(journey)), TrackingState(), {}, {}, {}, {}) }
-        compose.onNodeWithTag("verifiedBus").assertTextEquals("ABC-123")
-        compose.onNodeWithTag("newRealRequest").assertExists()
-        capture("journey-dark")
-    }
     @Test fun fleetKeepsOccupancyAndLocationIndependent() {
         val bus = FleetBus(1, "ABC-123", true, 40, 1, "Route 301", "Ana Perez", "STALE", Position(-12.04, -77.03, 5.0, Instant.EPOCH), "AVAILABLE", null, 28, null, 1, 1)
         show { FleetScreen(ScreenState(FleetState(FleetOverview(listOf(bus), Instant.EPOCH))), {}) }
@@ -71,15 +62,6 @@ class ReportLayoutsTest {
         compose.onNodeWithText("Last known data").assertExists()
         compose.onNodeWithTag("busDetails:1").assertExists()
         capture("fleet")
-    }
-    @Test fun requestFormShowsCountAndPreventsPrematureSubmission() {
-        var writes = 0
-        show { RequestFormScreen(ScreenState(SafetyState()), { _, _ -> writes++ }, {}) }
-        compose.onNodeWithText("0/500").assertExists()
-        compose.onNodeWithTag("reviewRealRequest").assertIsNotEnabled()
-        compose.onNodeWithTag("sendRealRequest").assertDoesNotExist()
-        assertEquals(0, writes)
-        capture("request")
     }
     @Test fun emergenciesPrioritizeDriversAndOpenAnIndependentDetail() {
         val critical = Emergency("00000000-0000-0000-0000-000000000001", "ACTIVE", "CRITICAL", 1, Instant.EPOCH)

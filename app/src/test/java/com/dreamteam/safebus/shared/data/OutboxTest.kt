@@ -33,14 +33,6 @@ class OutboxTest {
         store.failWrites = false; box.submit(request)
         assertEquals(1, scheduled)
     }
-    @Test fun repeatedJourneyClosurePreservesOriginalTimestampAndReason() = runBlocking {
-        val end = request.copy(id = "end:1", path = "/api/v1/journeys/1/end")
-        box().submit(end, preserveExistingEnd = true)
-        answer = DomainResult.Success(Unit)
-        assertEquals(Delivery.ACKNOWLEDGED, (box().submit(end.copy(body = "new timestamp".toByteArray()), preserveExistingEnd = true) as DomainResult.Success).value)
-        assertArrayEquals(end.body, sent.last().body)
-        assertTrue(store.values.isEmpty())
-    }
     @Test fun retriesExactOriginalPayloadAcrossRestartAndIsolatesAccounts() = runBlocking {
         assertEquals(Delivery.PENDING, (box().submit(request) as DomainResult.Success).value)
         assertEquals(0, (box("account-2").count() as DomainResult.Success).value)
@@ -57,7 +49,9 @@ class OutboxTest {
             assertEquals(answer, box().submit(request))
             assertTrue(store.values.isEmpty())
         }
-        assertThrows(IllegalArgumentException::class.java) { request.copy(path = "/api/v1/shifts/activate") }
+        for (path in listOf("/api/v1/shifts/activate", "/api/v1/passenger-requests", "/api/v1/journeys/1/end")) {
+            assertThrows(IllegalArgumentException::class.java) { request.copy(path = path) }
+        }
         Unit
     }
     @Test fun storageFailureDoesNotSendAndIdReuseDoesNotOverwriteOriginal() = runBlocking {

@@ -57,7 +57,6 @@ import com.dreamteam.safebus.shared.ui.*
             TrackingStatus.PENDING -> R.string.core_tracking_pending
             TrackingStatus.MANUAL_ONLY -> R.string.core_tracking_manual
             TrackingStatus.FAILED -> R.string.core_tracking_failed
-            TrackingStatus.AUTO_ENDED -> R.string.core_tracking_ended
         }))
         state.failure?.let { FailureNotice(it) }
         state.lastSample?.let { TimeLabel(it) }

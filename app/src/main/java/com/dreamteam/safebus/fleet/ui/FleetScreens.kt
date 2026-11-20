@@ -21,7 +21,6 @@ import androidx.compose.ui.res.stringResource
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.iam.ui.StepIndicator
 import com.dreamteam.safebus.fleet.domain.*
-import com.dreamteam.safebus.passenger.domain.BusQr
 import com.dreamteam.safebus.shared.domain.*
 import com.dreamteam.safebus.shared.ui.*
 import java.time.LocalDateTime

@@ -8,9 +8,6 @@ import com.dreamteam.safebus.fleet.ui.FleetViewModel
 import com.dreamteam.safebus.iam.data.*
 import com.dreamteam.safebus.iam.domain.*
 import com.dreamteam.safebus.iam.ui.AuthViewModel
-import com.dreamteam.safebus.passenger.data.*
-import com.dreamteam.safebus.passenger.domain.*
-import com.dreamteam.safebus.passenger.ui.PassengerViewModel
 import com.dreamteam.safebus.safetycase.data.*
 import com.dreamteam.safebus.safetycase.ui.*
 import com.dreamteam.safebus.shared.data.*
@@ -45,16 +42,9 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
     private fun authToken() = auth.token()
     private fun invalidate(token: String) = auth.invalidate(token)
     val authModel by lazy {
-        val anonymous = Outbox(store, "anonymous:$endpoint", PendingTransport { invalid("AUTHENTICATION_REQUIRED") })
-        models.model("auth") { AuthViewModel(auth, { input -> HttpPassengerService(api, anonymous).register(input) }, {
-            val active = account
-            active?.stopTracking()
-            if (active?.session?.role == Role.PASSENGER) {
-                when (val restored = active.passenger.restore()) {
-                    is DomainResult.Error -> restored
-                    is DomainResult.Success -> restored.value?.let { journey -> active.passenger.end(journey, EndReason.SIGN_OUT).map { Unit } } ?: DomainResult.Success(Unit)
-                }
-            } else DomainResult.Success(Unit)
+        models.model("auth") { AuthViewModel(auth, {
+            account?.stopTracking()
+            DomainResult.Success(Unit)
         }) }
     }
     fun bind(session: Session): AccountScope {
@@ -70,32 +60,27 @@ class CoreContainer(val endpoint: String, private val localHttp: Boolean, privat
 
 class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, store: SecureStore, engine: HttpEngine,
     token: () -> String?, unauthorized: (String) -> Unit, scheduleSync: () -> Unit = {}) {
+    init { require(session.role != Role.PASSENGER) }
     private val owner = "$endpoint:${session.role}:${session.companyId}:${session.userId}"
     val api = ApiClient(endpoint, localHttp, token, unauthorized, engine)
     val outbox = Outbox(store, owner, PendingTransport { request -> api.call("POST", request.path, request.body, request.contentType) {} }, onPending = scheduleSync)
     val trip = RemoteTripRepository(HttpTripService(api, outbox), store, owner)
-    val passenger = RemotePassengerRepository(HttpPassengerService(api, outbox), store, owner)
     @Volatile private var latestDriverPosition: Position? = null
     val safety = RemoteSafetyRepository(api, outbox, store, owner, driverPosition = { latestDriverPosition })
     val fleet = RemoteFleetRepository(api)
     val events = SupervisorEvents(endpoint, token, unauthorized)
     private val mutableShift = MutableStateFlow<ActiveShift?>(null)
-    private val mutableJourney = MutableStateFlow<Journey?>(null)
     private val mutableTracking = MutableStateFlow(TrackingState())
     val shift = mutableShift.asStateFlow()
-    val journey = mutableJourney.asStateFlow()
     val tracking = mutableTracking.asStateFlow()
     @Volatile var tracker: TrackingEngine? = null
         private set
     private val models = ViewModelStore()
     val tripModel = models.model("trip") { TripViewModel(trip, ::setShift) }
-    val passengerModel = models.model("passenger") { PassengerViewModel(passenger, ::setJourney) }
     val safetyModel = models.model("safety") { SafetyViewModel(safety) }
-    val historyModel = models.model("history") { SafetyViewModel(safety) }
     val panicModel = models.model("panic") { PanicViewModel(safety) }
     val fleetModel = models.model("fleet") { FleetViewModel(fleet) }
     val syncModel = models.model("sync") { SyncViewModel(outbox::count, outbox::flush) }
-    val requestDetailModel = models.model("request-detail") { RequestDetailViewModel(safety) }
     private val counting = RemoteCountingRepository(api)
     private val counterService = HttpCounterService(endpoint, localHttp, { session.role == Role.SUPERVISOR && token() != null }, engine)
     private val counterStore = store
@@ -112,20 +97,6 @@ class AccountScope(val session: Session, endpoint: String, localHttp: Boolean, s
         if (mutableShift.value == value) return
         stopTracking(); mutableShift.value = value
         if (value != null) tracker = TrackingEngine(sendPosition = { trip.locate(value, it) })
-        updateTracking()
-    }
-    fun setJourney(value: Journey?) {
-        if (mutableJourney.value == value) return
-        stopTracking(); mutableJourney.value = value
-        if (value != null) tracker = TrackingEngine(vehiclePosition = value.busId?.let { id -> { passenger.location(id) } }, endJourney = { summary ->
-            passenger.end(value, EndReason.AUTOMATIC_SEPARATION, summary).also { result ->
-                if (result is DomainResult.Success) {
-                    mutableTracking.value = TrackingState(TrackingStatus.AUTO_ENDED)
-                    mutableJourney.value = null
-                    passengerModel.synchronize(null)
-                }
-            }
-        })
         updateTracking()
     }
     fun updateTracking() { mutableTracking.value = tracker?.state?.value ?: TrackingState() }

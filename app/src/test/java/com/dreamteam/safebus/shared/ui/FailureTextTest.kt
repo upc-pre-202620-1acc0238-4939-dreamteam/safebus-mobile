@@ -15,7 +15,7 @@ class FailureTextTest {
         val messages = FailureKind.entries.map { failureText(Failure(it)) }
         assertEquals(FailureKind.entries.size, messages.distinct().size)
         assertTrue(messages.all { it != 0 })
-        assertNotEquals(failureText(Failure.fromStatus(409)), failureText(Failure.fromStatus(409, "DUPLICATE_CONTRIBUTION")))
+        assertNotEquals(failureText(Failure.fromStatus(403)), failureText(Failure.fromStatus(403, "ANDROID_ROLE_UNSUPPORTED")))
         val credentials = listOf("CREDENTIAL_EXPIRED", "CREDENTIAL_DISABLED", "CREDENTIAL_NOT_OWNED", "CREDENTIAL_INVALID")
         assertEquals(4, credentials.map { failureText(Failure.fromStatus(422, it)) }.distinct().size)
     }

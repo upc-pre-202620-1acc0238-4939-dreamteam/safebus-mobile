@@ -8,46 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.*
 import com.dreamteam.safebus.R
-import com.dreamteam.safebus.shared.domain.Photo
-import com.dreamteam.safebus.shared.domain.Delivery
 import com.dreamteam.safebus.shared.ui.*
 
-enum class SafetyTab { DRIVER_ALERTS, REQUESTS, HISTORY, EMERGENCIES, REVIEWS }
+enum class SafetyTab { DRIVER_ALERTS, EMERGENCIES, REVIEWS }
 private data class Decision(val title: Int, val id: String, val needsText: Boolean, val action: (String, String) -> Unit)
-
-@Composable fun RequestFormScreen(state: ScreenState<SafetyState>, submit: (String, Photo?) -> Unit, back: () -> Unit) {
-    var message by remember { mutableStateOf("") }
-    var photo by remember { mutableStateOf<Photo?>(null) }
-    var reviewing by remember { mutableStateOf(false) }
-    LaunchedEffect(state.value.receipt) { if (state.value.receipt != null) { message = ""; photo = null; reviewing = false } }
-    val returnToForm = { reviewing = false }
-    BackHandler(reviewing && !state.busy, returnToForm)
-    CorePage(if (reviewing) R.string.ui_review_request else R.string.core_request_new, state.busy, state.failure,
-        back = { if (reviewing) returnToForm() else back() }) {
-        CoreNotice(stringResource(R.string.ui_request_notice), icon = R.drawable.ic_shield)
-        val receipt = state.value.receipt
-        if (receipt != null) {
-            DeliveryNotice(receipt.delivery)
-            CoreCard { Text(stringResource(R.string.core_case_reference, receipt.id)) }
-        } else if (reviewing && photo != null) {
-            RequestReview(message, photo!!, state.busy, { submit(message, photo) }, returnToForm)
-        } else {
-            CoreField(R.string.core_request_message, message, { if (it.length <= 500) message = it }, "realIncidentMessage", multiline = true, enabled = !state.busy)
-            Text(stringResource(R.string.ui_message_count, message.length), style = MaterialTheme.typography.bodySmall)
-            CoreCard(stringResource(R.string.ui_incident_photo)) { PhotoChooser(photo, { photo = it }, !state.busy) }
-            Text(stringResource(R.string.core_request_explanation), style = MaterialTheme.typography.bodyMedium)
-            CoreButton(R.string.ui_review_request, "reviewRealRequest", !state.busy && message.trim().length in 1..500 && photo != null) { reviewing = true }
-        }
-        if (!reviewing) CoreButton(R.string.core_back, "requestBack", !state.busy, secondary = true, action = back)
-    }
-}
-
-@Composable fun RequestReview(message: String, photo: Photo, busy: Boolean, send: () -> Unit, edit: () -> Unit) {
-    CoreNotice(stringResource(R.string.ui_review_before_send))
-    CoreCard(stringResource(R.string.core_request_message)) { Text(message); PrivatePhoto(photo) }
-    CoreButton(R.string.core_send_request, "sendRealRequest", !busy, action = send)
-    CoreButton(R.string.core_back, "editRealRequest", !busy, secondary = true, action = edit)
-}
 
 @Composable private fun ContributionProgress(count: Int) {
     Text(stringResource(R.string.core_contributors, count))
@@ -66,7 +30,7 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
 
 @Composable fun SafetyListScreen(state: ScreenState<SafetyState>, tab: SafetyTab, refresh: () -> Unit,
     evidence: (String) -> Unit, clearEvidence: () -> Unit, approve: (Long) -> Unit = {}, decline: (Long, String, String) -> Unit = { _, _, _ -> },
-    attend: (String) -> Unit = {}, close: (String, String, String) -> Unit = { _, _, _ -> }, detail: ((String) -> Unit)? = null) {
+    attend: (String) -> Unit = {}, close: (String, String, String) -> Unit = { _, _, _ -> }) {
     var selectedGroup by remember(tab) { mutableStateOf<Long?>(null) }
     var selectedAlert by remember(tab) { mutableStateOf<String?>(null) }
     BackHandler(selectedGroup != null || selectedAlert != null) { selectedGroup = null; selectedAlert = null }
@@ -74,8 +38,6 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
     var decision by remember(tab) { mutableStateOf<Decision?>(null) }
     val title = when (tab) {
         SafetyTab.DRIVER_ALERTS -> R.string.core_my_alerts
-        SafetyTab.REQUESTS -> R.string.core_my_requests
-        SafetyTab.HISTORY -> R.string.core_bus_alerts
         SafetyTab.EMERGENCIES -> R.string.core_emergencies
         SafetyTab.REVIEWS -> R.string.core_reviews
     }
@@ -105,28 +67,6 @@ private data class Decision(val title: Int, val id: String, val needsText: Boole
                             decision = Decision(R.string.core_close_emergency, alert.id, true) { outcome, response -> close(alert.id, outcome, response) }
                         }
                     }
-                } }
-            }
-            SafetyTab.REQUESTS -> {
-                CaseTabs(completed) { completed = it }
-                val requests = state.value.requests.filter { (it.status in setOf("APPROVED", "DECLINED", "NOT_APPROVED", "EXPIRED", "LATE")) == completed }
-                if (requests.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_requests, icon = R.drawable.ic_assignment)
-                requests.forEach { request -> CoreCard {
-                    StateLabel(request.status); Text(request.message); TimeLabel(request.submittedAt)
-                    request.contributorCount?.let { ContributionProgress(it) }
-                    Text(stringResource(R.string.ui_private_evidence), style = MaterialTheme.typography.bodySmall)
-                    request.decision?.let { StateLabel(it) }; request.decidedAt?.let { TimeLabel(it) }; request.response?.let { Text(it) }
-                    if (request.status == "PENDING") DeliveryNotice(Delivery.PENDING)
-                    if (detail != null) CoreButton(R.string.extra_request_detail, "requestDetail:${request.id}", !state.busy && request.status != "PENDING") { detail(request.id) }
-                    CoreButton(R.string.core_view_photo, "evidence:${request.id}", !state.busy && request.status != "PENDING", secondary = true, icon = R.drawable.ic_photo_camera) { evidence(request.id) }
-                } }
-            }
-            SafetyTab.HISTORY -> {
-                if (state.value.history.isEmpty() && state.value.loaded) CoreEmpty(R.string.ui_no_bus_reports, icon = R.drawable.ic_history)
-                state.value.history.forEach { item -> CoreCard(item.reference) {
-                    Text(stringResource(if (item.source == "DRIVER") R.string.core_role_driver else R.string.core_role_passenger))
-                    StateLabel(item.state); TimeLabel(item.recordedAt)
-                    item.count?.let { Text(stringResource(R.string.core_contributors, it)) }
                 } }
             }
             SafetyTab.REVIEWS -> {

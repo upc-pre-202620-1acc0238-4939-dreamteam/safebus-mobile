@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -13,40 +12,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.*
 import com.dreamteam.safebus.R
-import com.dreamteam.safebus.shared.data.PhotoLoader
 import com.dreamteam.safebus.shared.domain.*
 import kotlinx.coroutines.*
-
-@Composable fun PhotoChooser(photo: Photo?, onChange: (Photo?) -> Unit, enabled: Boolean = true) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var loading by remember { mutableStateOf(false) }
-    var invalid by remember { mutableStateOf(false) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch {
-            loading = true; invalid = false; onChange(null)
-            when (val result = PhotoLoader.load(context.contentResolver, uri)) {
-                is DomainResult.Success -> onChange(result.value)
-                is DomainResult.Error -> invalid = true
-            }
-            loading = false
-        }
-    }
-    CoreButton(R.string.core_photo_choose, "choosePhoto", enabled && !loading, secondary = true, icon = R.drawable.ic_photo_camera) {
-        picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
-    Text(stringResource(R.string.core_photo_hint))
-    if (photo != null) {
-        PrivatePhoto(photo)
-        CoreNotice(stringResource(R.string.core_photo_selected), icon = R.drawable.ic_check_circle, modifier = Modifier.testTag("photoSelected"))
-    }
-    if (invalid) Text(stringResource(R.string.core_photo_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("photoError"))
-    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-}
 
 @Composable fun PrivatePhoto(photo: Photo) {
     val bitmap by produceState<android.graphics.Bitmap?>(null, photo) {

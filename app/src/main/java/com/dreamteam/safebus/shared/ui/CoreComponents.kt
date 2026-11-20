@@ -113,6 +113,7 @@ import java.time.format.FormatStyle
 }
 
 fun failureText(failure: Failure): Int = when (failure.code) {
+    "ANDROID_ROLE_UNSUPPORTED" -> R.string.ui_staff_only
     "SAVE_NOT_STARTED" -> R.string.provision_save_not_started
     "ASSIGNMENT_OVERLAP" -> R.string.provision_overlap
     "RESOURCE_NOT_IN_COMPANY" -> R.string.provision_resource_company
@@ -128,15 +129,9 @@ fun failureText(failure: Failure): Int = when (failure.code) {
     "CREDENTIAL_INVALID" -> R.string.core_credential_invalid
     "ASSIGNMENT_NOT_AVAILABLE" -> R.string.core_assignment_unavailable
     "ASSIGNMENT_NOT_FOUND" -> R.string.core_no_assignment
-    "ACTIVE_JOURNEY_EXISTS" -> R.string.core_existing_journey
-    "BUS_NOT_IN_SERVICE" -> R.string.core_bus_not_serving
-    "BUS_QR_INVALID" -> R.string.core_bus_qr_invalid
     "ALERT_NOT_DELIVERED" -> R.string.core_alert_not_delivered
     "INVALID_END_TIME", "INVALID_ACTIVATION_TIME", "INVALID_CAPTURE_TIME" -> R.string.core_clock_error
-    "PHOTO_INVALID", "FACE_PHOTO_INVALID", "FACE_PHOTO_TOO_LARGE", "EVIDENCE_PHOTO_INVALID", "EVIDENCE_PHOTO_TOO_LARGE" -> R.string.core_photo_invalid
-    "DUPLICATE_CONTRIBUTION" -> R.string.core_duplicate_request
-    "DNI_ALREADY_REGISTERED" -> R.string.core_duplicate_dni
-    "BUS_ID_UNAVAILABLE" -> R.string.core_bus_id_missing
+    "PHOTO_INVALID", "EVIDENCE_PHOTO_INVALID", "EVIDENCE_PHOTO_TOO_LARGE" -> R.string.core_photo_invalid
     else -> when (failure.kind) {
         FailureKind.NETWORK -> R.string.core_network_error
         FailureKind.UNAUTHORIZED -> R.string.core_auth_error

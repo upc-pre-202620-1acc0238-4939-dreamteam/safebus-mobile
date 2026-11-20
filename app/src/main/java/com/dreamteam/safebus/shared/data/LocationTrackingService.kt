@@ -15,11 +15,9 @@ import android.os.SystemClock
 import com.dreamteam.safebus.R
 import com.dreamteam.safebus.SafeBusApplication
 import com.dreamteam.safebus.AccountScope
-import com.dreamteam.safebus.iam.domain.Role
 import com.dreamteam.safebus.shared.domain.trackingDelayMillis
 import com.dreamteam.safebus.trip.domain.Position
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.combine
 import java.time.Instant
 
 class LocationTrackingService : Service(), LocationListener {
@@ -49,7 +47,7 @@ class LocationTrackingService : Service(), LocationListener {
         } catch (_: SecurityException) { active.unavailable(); stopSelf(); return START_NOT_STICKY }
         work = scope.launch {
             launch { container.auth.session.collect { if (it?.accessToken != active.session.accessToken) stopSelf() } }
-            launch { combine(active.shift, active.journey) { shift, journey -> shift != null || journey != null }.collect { if (!it) stopSelf() } }
+            launch { active.shift.collect { if (it == null) stopSelf() } }
             while (isActive && permitted()) {
                 val beganAt = SystemClock.elapsedRealtime()
                 val tracker = active.tracker ?: break
@@ -57,7 +55,7 @@ class LocationTrackingService : Service(), LocationListener {
                 active.updateTracking()
                 if (!tracker.shouldCollectLocation) break
                 active.outbox.flush()
-                delay(trackingDelayMillis(active.session.role == Role.DRIVER, SystemClock.elapsedRealtime() - beganAt))
+                delay(trackingDelayMillis(SystemClock.elapsedRealtime() - beganAt))
             }
             if (!permitted()) active.unavailable()
             stopSelf()

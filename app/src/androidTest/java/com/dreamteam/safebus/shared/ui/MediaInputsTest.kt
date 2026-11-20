@@ -15,11 +15,10 @@ class MediaInputsTest {
         compose.setContent { CoreTheme { Column {
             var qr by remember { mutableStateOf("") }
             QrInput(qr, { qr = it; entered = it })
-            PhotoChooser(null, {}, enabled = false)
         } } }
         compose.onNodeWithTag("qrContent").performTextInput("actual-credential")
         assertEquals("actual-credential", entered)
         compose.onNodeWithTag("photoSelected").assertDoesNotExist()
-        compose.onNodeWithTag("choosePhoto").assertIsNotEnabled()
+        compose.onNodeWithTag("choosePhoto").assertDoesNotExist()
     }
 }

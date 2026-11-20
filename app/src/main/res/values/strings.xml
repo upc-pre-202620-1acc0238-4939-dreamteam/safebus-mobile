@@ -3,7 +3,6 @@
     <string name="app_name">SafeBus</string>
     <string name="welcome">Welcome</string>
     <string name="sign_in">Sign in</string>
-    <string name="create_account">Create account</string>
     <string name="company_access">Drivers and supervisors sign in with their company credentials. Passengers can create an account.</string>
     <string name="identifier">DNI or institutional code</string>
     <string name="password">Password</string>
@@ -123,9 +122,6 @@
     <string name="core_server_error">The server could not complete this action. Try again.</string>
     <string name="core_response_error">The server response is incompatible. No data from that response was saved.</string>
     <string name="core_storage_error">Unable to save securely. Check the available storage and try again.</string>
-    <string name="core_duplicate_request">You already contributed to this group. Check My requests.</string>
-    <string name="core_duplicate_dni">This DNI is already registered. Sign in with your account.</string>
-    <string name="core_bus_id_missing">This QR code does not include the bus identifier. You can travel and submit requests; bus history and automatic journey ending require the complete company QR code.</string>
     <string name="core_pending">Saved on this device. Waiting to send to the server.</string>
     <string name="core_received">The server confirmed receipt.</string>
     <string name="core_confirm">Confirm</string>
@@ -147,9 +143,6 @@
     <string name="core_status_unknown">No information available</string>
     <string name="core_status_critical">Critical · Driver</string>
     <string name="core_status_high">High · Passengers</string>
-    <string name="core_photo_choose">Select photo</string>
-    <string name="core_photo_selected">Photo selected</string>
-    <string name="core_photo_hint">JPEG or PNG · up to 5 MB · the photo is sent privately.</string>
     <string name="core_photo_invalid">Select a valid JPEG or PNG image up to 5 MB and 25 megapixels.</string>
     <string name="core_photo_description">Private photographic evidence</string>
     <string name="core_qr_content">QR code content</string>
@@ -159,13 +152,6 @@
     <string name="core_login_id">DNI or company code</string>
     <string name="core_password">Password</string>
     <string name="core_login">Sign in</string>
-    <string name="core_register">Create passenger account</string>
-    <string name="core_dni">8-digit DNI</string>
-    <string name="core_face_photo">Photo of your face</string>
-    <string name="core_registration_privacy">Your DNI and face photo identify your account. This photo is not incident evidence and does not imply automatic facial verification.</string>
-    <string name="core_terms">I accept the use of my DNI and photo to identify my account, and the private processing of my safety requests. Registration terms, October 2026 version.</string>
-    <string name="core_password_rule">Use a password with at least 8 characters.</string>
-    <string name="core_registered">Your account was created. Sign in with your DNI.</string>
     <string name="core_server_settings">Server connection</string>
     <string name="core_api_url">Server address</string>
     <string name="core_api_help">Use the SafeBus HTTPS address. During development, the emulator can connect to http://10.0.2.2:8080.</string>
@@ -187,24 +173,11 @@
     <string name="core_tracking_pending">Location saved, waiting to send.</string>
     <string name="core_tracking_manual">Precise location is unavailable. The passenger can end the journey manually.</string>
     <string name="core_tracking_failed">Tracking needs attention. Check the connection or permissions.</string>
-    <string name="core_tracking_ended">Journey ended automatically after sustained separation from the bus.</string>
-    <string name="core_journey">My journey</string>
-    <string name="core_start_journey">Validate bus and start journey</string>
-    <string name="core_journey_intro">Scan your bus QR code to view the company, route and driver.</string>
     <string name="core_driver_name">Driver: %1$s</string>
-    <string name="core_request_new">Send safety request</string>
-    <string name="core_end_journey">End journey</string>
-    <string name="core_end_journey_detail">Your account will be disconnected from the bus. Your requests and their responses will remain available.</string>
-    <string name="core_journey_ended">Your journey ended on this device.</string>
     <string name="core_company_verified">Company validated</string>
     <string name="core_my_alerts">My alerts</string>
-    <string name="core_my_requests">My requests</string>
-    <string name="core_bus_alerts">Bus alerts</string>
     <string name="core_emergencies">Emergencies</string>
     <string name="core_reviews">Reviews</string>
-    <string name="core_request_message">Describe the incident (1–500 characters)</string>
-    <string name="core_request_explanation">Include a photo of the incident. Three different passengers within five minutes are needed to request a review; the company decides whether to activate an emergency.</string>
-    <string name="core_send_request">Send request</string>
     <string name="core_view_photo">View private evidence</string>
     <string name="core_contributors">%1$d of 3 passengers</string>
     <string name="core_case_reference">Reference: %1$s</string>
@@ -276,15 +249,11 @@
     <string name="core_sync_retry">Retry deliveries</string>
     <string name="core_live_connected">Live events connected</string>
     <string name="core_live_reconnecting">Reconnecting events · you can refresh the inbox</string>
-    <string name="core_history_requires_journey">Start a journey to view alerts for your bus.</string>
     <string name="core_credential_expired">The QR credential expired. Request a new one from your company.</string>
     <string name="core_credential_disabled">The company disabled this QR credential.</string>
     <string name="core_credential_foreign">This QR credential belongs to another driver.</string>
     <string name="core_credential_invalid">The QR credential is invalid. Check the code provided by your company.</string>
     <string name="core_assignment_unavailable">The assignment has already started or is unavailable for activation.</string>
-    <string name="core_existing_journey">You already have an active journey. End it before starting another.</string>
-    <string name="core_bus_not_serving">This bus currently has no active shift.</string>
-    <string name="core_bus_qr_invalid">The bus QR code is invalid or the bus is disabled.</string>
     <string name="core_clock_error">The device time is incompatible with the journey. Enable automatic date and time and try again.</string>
     <string name="core_restore_shift_missing">This shift is already active, but this device cannot recover its session. Contact your company representative.</string>
     <string name="core_company_not_verified">Company validation not recorded</string>
@@ -333,9 +302,6 @@
     <string name="extra_contact_send">Send contact request</string>
     <string name="extra_contact_receipt">Request received: %1$s</string>
     <string name="extra_contact_help">Request information for your company. We keep the delivery reference to avoid duplicate submissions on retry.</string>
-    <string name="extra_request_detail">View updated details</string>
-    <string name="extra_request_detail_title">My request details</string>
-    <string name="extra_close_detail">Close details</string>
     <string name="extra_connection_pending">The request is still pending. Retry before creating a new one.</string>
     <string name="extra_clear_contact">Create another request</string>
     <string name="core_local_network_title">Local server access</string>
@@ -345,6 +311,8 @@
     <string name="ui_choose_date_time">Choose date and time</string>
     <string name="ui_choose_time">Choose time</string>
     <string name="ui_assignment_dates_invalid">Select both dates and times. The end must be after the start.</string>
+    <string name="ui_staff_app">For supervisors and drivers</string>
+    <string name="ui_staff_only">This Android app is for supervisors and drivers. Use the team’s Flutter app for passenger access.</string>
 </resources>
 
 
