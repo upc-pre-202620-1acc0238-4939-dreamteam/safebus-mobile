@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -117,8 +118,8 @@ enum class ProvisionForm(val title: Int) {
 
 @Composable fun ProvisionScreen(state: ScreenState<FleetState>, save: (FleetChange) -> Unit, clear: () -> Unit) {
     var form by remember { mutableStateOf(ProvisionForm.ASSIGNMENT) }
-    var fields by remember(form) { mutableStateOf<Map<String, String>>(emptyMap()) }
-    var step by remember(form) { mutableIntStateOf(0) }
+    var fields by rememberSaveable(form) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var step by rememberSaveable(form) { mutableIntStateOf(0) }
     var invalid by remember(form) { mutableStateOf(false) }
     var submitting by remember(form) { mutableStateOf(false) }
     var saved by remember(form) { mutableStateOf(false) }
@@ -137,7 +138,10 @@ enum class ProvisionForm(val title: Int) {
         }
         Text(stringResource(form.title), style = MaterialTheme.typography.titleLarge)
         if (form == ProvisionForm.ASSIGNMENT) { StepIndicator(step, 5); CoreNotice(stringResource(R.string.core_catalog_note)) }
-        if (invalid) FailureNotice(Failure(FailureKind.VALIDATION))
+        if (invalid) {
+            if (form == ProvisionForm.ASSIGNMENT && step == 3) CoreNotice(stringResource(R.string.ui_assignment_dates_invalid), Modifier.testTag("assignmentDateError"))
+            else FailureNotice(Failure(FailureKind.VALIDATION))
+        }
         val labels = when (form) {
             ProvisionForm.BUS -> listOf("plate" to R.string.core_plate)
             ProvisionForm.DRIVER -> listOf("name" to R.string.core_name, "login" to R.string.core_login_id, "password" to R.string.core_password)
@@ -153,10 +157,15 @@ enum class ProvisionForm(val title: Int) {
             else -> emptyList()
         }
         CoreCard(stringResource(if (form == ProvisionForm.ASSIGNMENT && step == 4) R.string.ui_assignment_review else form.title)) {
-            visible.forEach { (key, label) -> CoreField(label, fields[key].orEmpty(), { fields = fields + (key to it); invalid = false; saved = false }, "provision:$key", password = key == "password", enabled = !state.busy) }
+            visible.forEach { (key, label) ->
+                val change: (String) -> Unit = { fields = fields + (key to it); invalid = false; saved = false }
+                if (form == ProvisionForm.ASSIGNMENT && key in setOf("start", "end"))
+                    DateTimeField(label, fields[key].orEmpty(), change, "provision:$key", enabled = !state.busy)
+                else CoreField(label, fields[key].orEmpty(), change, "provision:$key", password = key == "password", enabled = !state.busy)
+            }
             if (form == ProvisionForm.ASSIGNMENT && step == 4) labels.forEach { (key, label) ->
                 Text(stringResource(label), style = MaterialTheme.typography.labelLarge)
-                Text(fields[key].orEmpty())
+                Text(if (key in setOf("start", "end")) dateTimeLabel(fields[key].orEmpty()) else fields[key].orEmpty())
             }
         }
         if (form == ProvisionForm.ASSIGNMENT) Text(stringResource(R.string.core_time_zone, zone.id))

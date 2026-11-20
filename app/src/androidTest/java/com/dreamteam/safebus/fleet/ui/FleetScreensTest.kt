@@ -24,25 +24,34 @@ class FleetScreensTest {
             compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput(value)
             compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         }
-        compose.onNodeWithTag("provision:start").performScrollTo().performTextInput("2026-11-11T08:00")
-        compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2026-11-11T18:00")
+        chooseTime("start", 8)
+        chooseTime("end", 18)
         compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
     }
-    @Test fun pastedDatesIgnoreSurroundingWhitespaceInReviewAndServerSubmission() {
-        var saved: FleetChange.Assignment? = null
-        compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { saved = it as FleetChange.Assignment }, {}) } }
-        listOf("driver" to "4", "bus" to "1", "route" to "1").forEach { (field, value) ->
-            compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput(value)
+    private fun chooseTime(field: String, hour: Int) {
+        compose.onNodeWithTag("provision:$field").performScrollTo().performClick()
+        compose.onNodeWithTag("dateConfirm").performClick()
+        compose.onNodeWithContentDescription("$hour hours").performClick()
+        compose.onNodeWithContentDescription("Select minutes").performClick()
+        compose.onNodeWithContentDescription("0 minutes").performClick()
+        compose.onNodeWithTag("timeConfirm").performClick()
+    }
+    @Test fun missingOrReversedDatesShowFeedbackWithoutSubmitting() {
+        var writes = 0
+        compose.setContent { CoreTheme { ProvisionScreen(ScreenState(FleetState()), { writes++ }, {}) } }
+        listOf("driver", "bus", "route").forEach { field ->
+            compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput("1")
             compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         }
-        compose.onNodeWithTag("provision:start").performScrollTo().performTextInput(" 2028-04-15T09:30 ")
-        compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2028-11-22T18:45\n\n")
         compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
-        compose.onNodeWithTag("coreError").assertDoesNotExist()
-        compose.onNodeWithTag("saveProvision").performScrollTo().performClick()
-        val zone = java.time.ZoneId.systemDefault()
-        assertEquals(java.time.LocalDateTime.parse("2028-04-15T09:30").atZone(zone).toInstant(), saved?.startsAt)
-        assertEquals(java.time.LocalDateTime.parse("2028-11-22T18:45").atZone(zone).toInstant(), saved?.endsAt)
+        compose.onNodeWithTag("assignmentDateError").assertExists()
+        assertEquals(0, writes)
+        chooseTime("start", 18)
+        chooseTime("end", 8)
+        compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
+        compose.onNodeWithTag("assignmentDateError").assertExists()
+        compose.onNodeWithTag("saveProvision").assertDoesNotExist()
+        assertEquals(0, writes)
     }
     @Test fun assignmentSaveShowsProgressThenVisibleReceiptAndPreventsDuplicateSubmit() {
         val state = mutableStateOf(ScreenState(FleetState()))
@@ -85,7 +94,7 @@ class FleetScreensTest {
         assertNull(state.value.value.savedChange)
         compose.onNodeWithTag("acknowledgeProvision").performClick()
         compose.onNodeWithTag("assignmentBack").performScrollTo().performClick()
-        compose.onNodeWithTag("provision:start").assertTextContains("2026-11-11T08:00")
+        compose.onNodeWithTag("provision:start").assertTextContains("8:00", substring = true)
     }
     @Test fun searchMatchesDriverAndRouteAndFiltersStaleLocations() {
         val bus = locatedBus().copy(route = "Lima Centro", driver = "Ana Perez", locationStatus = "STALE")
@@ -108,15 +117,21 @@ class FleetScreensTest {
             compose.onNodeWithTag("provision:$field").performScrollTo().performTextInput(value)
             compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         }
-        compose.onNodeWithTag("provision:start").performScrollTo().performTextInput("2026-11-12T08:00")
-        compose.onNodeWithTag("provision:end").performScrollTo().performTextInput("2026-11-12T12:00")
+        chooseTime("start", 8)
+        chooseTime("end", 18)
         compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         assertNull(saved)
         compose.onNodeWithTag("assignmentBack").performScrollTo().performClick()
-        compose.onNodeWithTag("provision:start").assertTextContains("2026-11-12T08:00")
+        compose.onNodeWithTag("provision:start").assertTextContains("8:00", substring = true)
         compose.onNodeWithTag("assignmentNext").performScrollTo().performClick()
         compose.onNodeWithTag("saveProvision").performScrollTo().performClick()
-        assertEquals(2L, (saved as FleetChange.Assignment).busId)
+        val assignment = saved as FleetChange.Assignment
+        assertEquals(2L, assignment.busId)
+        val zone = java.time.ZoneId.systemDefault()
+        assertEquals(8, assignment.startsAt.atZone(zone).hour)
+        assertEquals(18, assignment.endsAt.atZone(zone).hour)
+        assertEquals(0, assignment.startsAt.atZone(zone).minute)
+        assertEquals(java.time.LocalDate.now(), assignment.startsAt.atZone(zone).toLocalDate())
     }
     @Test fun mapActionPreservesCoordinatesAndViewIntent() {
         val bus = locatedBus()

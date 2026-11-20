@@ -256,8 +256,8 @@
     <string name="core_driver_id">Identificador del conductor</string>
     <string name="core_bus_id">Identificador del bus</string>
     <string name="core_route_id">Identificador de la ruta</string>
-    <string name="core_start_time">Inicio (AAAA-MM-DDTHH:mm)</string>
-    <string name="core_end_time">Fin (AAAA-MM-DDTHH:mm)</string>
+    <string name="core_start_time">Inicio</string>
+    <string name="core_end_time">Fin</string>
     <string name="core_time_zone">Zona horaria: %1$s</string>
     <string name="core_capacity">Capacidad de pasajeros</string>
     <string name="core_technical_record">Referencia del registro técnico</string>

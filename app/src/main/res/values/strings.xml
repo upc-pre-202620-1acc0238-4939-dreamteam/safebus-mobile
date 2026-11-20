@@ -252,8 +252,8 @@
     <string name="core_driver_id">Driver identifier</string>
     <string name="core_bus_id">Bus identifier</string>
     <string name="core_route_id">Route identifier</string>
-    <string name="core_start_time">Start (YYYY-MM-DDTHH:mm)</string>
-    <string name="core_end_time">End (YYYY-MM-DDTHH:mm)</string>
+    <string name="core_start_time">Start</string>
+    <string name="core_end_time">End</string>
     <string name="core_time_zone">Time zone: %1$s</string>
     <string name="core_capacity">Passenger capacity</string>
     <string name="core_technical_record">Technical record reference</string>
