@@ -15,14 +15,15 @@ class DateTimeFieldTest {
         val value = mutableStateOf("2028-04-15T09:30")
         compose.setContent { CoreTheme { DateTimeField(R.string.core_start_time, value.value, { value.value = it }, "date") } }
         compose.onNodeWithTag("date").assertHasClickAction().performClick()
+        compose.onNodeWithText("Sunday, April 16, 2028").performClick()
         compose.onNodeWithTag("dateConfirm").performClick()
         compose.onNodeWithContentDescription("10 hours").performClick()
         compose.onNodeWithContentDescription("Select minutes").performClick()
         compose.onNodeWithContentDescription("45 minutes").performClick()
         compose.onNodeWithTag("timeConfirm").performClick()
-        assertEquals("2028-04-15T10:45", value.value)
+        assertEquals("2028-04-16T10:45", value.value)
         compose.onNode(hasSetTextAction()).assertDoesNotExist()
-        compose.onNodeWithText("2028-04-15T10:45").assertDoesNotExist()
+        compose.onNodeWithText("2028-04-16T10:45").assertDoesNotExist()
     }
     @Test fun cancellingEitherDialogKeepsOriginalValueAndDoesNotWrite() {
         var writes = 0
