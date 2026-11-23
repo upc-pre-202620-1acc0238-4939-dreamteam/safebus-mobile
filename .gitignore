@@ -5,3 +5,8 @@
 local.properties
 *.iml
 captures/
+.DS_Store
+Thumbs.db
+*.apk
+*.aab
+.cxx/
