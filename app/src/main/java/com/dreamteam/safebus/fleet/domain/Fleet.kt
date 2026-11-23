@@ -14,6 +14,26 @@ data class GroupCount(val status: String, val contributors: Int, val attached: I
     init { require(contributors >= 0 && attached >= 0) }
 }
 data class FleetOverview(val buses: List<FleetBus>, val updatedAt: Instant)
+data class FleetMetrics(
+    val totalBuses: Int,
+    val activeBuses: Int,
+    val overCapacityCount: Int,
+    val attentionNeededCount: Int
+) {
+    val inServiceRate: Float get() = if (totalBuses > 0) activeBuses.toFloat() / totalBuses else 0f
+}
+
+fun FleetOverview.metrics(): FleetMetrics {
+    val active = buses.count { it.locationStatus in setOf("CURRENT", "AVAILABLE") }
+    val overCapacity = buses.count { it.load == "OVER_CAPACITY" }
+    val attention = buses.count { it.emergencyCount > 0 || it.pendingGroups > 0 || it.load == "OVER_CAPACITY" }
+    return FleetMetrics(
+        totalBuses = buses.size,
+        activeBuses = active,
+        overCapacityCount = overCapacity,
+        attentionNeededCount = attention
+    )
+}
 data class ProvisionReceipt(val id: Long, val credential: String? = null, val expiresAt: Instant? = null) {
     init { require(id > 0) }
     override fun toString() = "ProvisionReceipt(id=$id)"
