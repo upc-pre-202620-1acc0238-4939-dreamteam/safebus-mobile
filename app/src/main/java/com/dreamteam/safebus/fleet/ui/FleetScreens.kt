@@ -50,6 +50,7 @@ import java.time.ZoneId
         if (map) CoreNotice(stringResource(R.string.ui_map_fallback), icon = R.drawable.ic_map, modifier = Modifier.testTag("fleetMapFallback"))
         if (mapMissing) CoreNotice(stringResource(R.string.core_map_unavailable), modifier = Modifier.testTag("mapUnavailable"))
         state.value.overview?.let { overview ->
+            FleetMetricsSummary(overview.metrics(), Modifier.testTag("fleetMetricsSummary"))
             TimeLabel(overview.updatedAt)
             val buses = overview.buses.filter { bus ->
                 listOfNotNull(bus.plate, bus.route, bus.driver).any { it.contains(search, ignoreCase = true) } && when (filter) {
