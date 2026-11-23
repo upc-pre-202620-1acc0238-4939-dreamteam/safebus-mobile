@@ -45,4 +45,34 @@ class FleetMetricsTest {
         assertEquals(1, metrics.attentionNeededCount)
         assertEquals(2f / 3f, metrics.inServiceRate, 0.001f)
     }
+
+    @Test fun countsBusesNeedingAttentionWhenEmergenciesOrPendingReviewsOccur() {
+        val busWithEmergency = FleetBus(
+            id = 10, plate = "EMG-001", enabled = true, capacity = 50, shiftId = 20,
+            route = "Line 1", driver = "Driver A", locationStatus = "CURRENT",
+            position = null, occupancyStatus = "NORMAL", occupancyReason = null,
+            count = 25, load = "NORMAL", emergencyCount = 2, pendingGroups = 0
+        )
+        val busWithReview = FleetBus(
+            id = 11, plate = "REV-002", enabled = true, capacity = 40, shiftId = 21,
+            route = "Line 2", driver = "Driver B", locationStatus = "CURRENT",
+            position = null, occupancyStatus = "NORMAL", occupancyReason = null,
+            count = 15, load = "NORMAL", emergencyCount = 0, pendingGroups = 1
+        )
+        val normalBus = FleetBus(
+            id = 12, plate = "OK-003", enabled = true, capacity = 30, shiftId = 22,
+            route = "Line 3", driver = "Driver C", locationStatus = "AVAILABLE",
+            position = null, occupancyStatus = "NORMAL", occupancyReason = null,
+            count = 10, load = "NORMAL", emergencyCount = 0, pendingGroups = 0
+        )
+
+        val overview = FleetOverview(listOf(busWithEmergency, busWithReview, normalBus), Instant.now())
+        val metrics = overview.metrics()
+
+        assertEquals(3, metrics.totalBuses)
+        assertEquals(3, metrics.activeBuses)
+        assertEquals(0, metrics.overCapacityCount)
+        assertEquals(2, metrics.attentionNeededCount)
+        assertEquals(1.0f, metrics.inServiceRate, 0.001f)
+    }
 }
