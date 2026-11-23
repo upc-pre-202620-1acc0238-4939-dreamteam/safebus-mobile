@@ -9,3 +9,8 @@ captures/
 *.keystore
 keystore.properties
 google-services.json
+.DS_Store
+Thumbs.db
+*.apk
+*.aab
+.cxx/

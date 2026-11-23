@@ -317,6 +317,11 @@
     <string name="ui_assignment_dates_invalid">Selecciona ambas fechas y horas. El fin debe ser posterior al inicio.</string>
     <string name="ui_staff_app">Para supervisores y conductores</string>
     <string name="ui_staff_only">Esta aplicación Android es para supervisores y conductores. Accede como pasajero desde la aplicación Flutter del equipo.</string>
+    <string name="core_diagnostics_title">Diagnóstico del Sistema</string>
+    <string name="core_diagnostics_version">Versión: %1$s (%2$d)</string>
+    <string name="core_diagnostics_server">Servidor: %1$s</string>
+    <string name="core_diagnostics_environment_local">Servidor Local de Desarrollo</string>
+    <string name="core_diagnostics_environment_remote">Servidor de Producción en Nube</string>
 </resources>
 
 
