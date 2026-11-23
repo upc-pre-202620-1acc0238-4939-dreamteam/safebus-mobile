@@ -317,6 +317,11 @@
     <string name="ui_assignment_dates_invalid">Selecciona ambas fechas y horas. El fin debe ser posterior al inicio.</string>
     <string name="ui_staff_app">Para supervisores y conductores</string>
     <string name="ui_staff_only">Esta aplicación Android es para supervisores y conductores. Accede como pasajero desde la aplicación Flutter del equipo.</string>
+    <string name="core_fleet_metrics_title">Estado General de Flota</string>
+    <string name="core_fleet_total_buses">Total: %1$d</string>
+    <string name="core_fleet_in_service">En servicio: %1$d</string>
+    <string name="core_fleet_attention_needed">Atención: %1$d</string>
+    <string name="core_fleet_over_capacity_count">Sobre aforo: %1$d</string>
 </resources>
 
 

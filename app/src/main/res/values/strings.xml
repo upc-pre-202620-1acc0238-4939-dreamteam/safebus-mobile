@@ -313,6 +313,11 @@
     <string name="ui_assignment_dates_invalid">Select both dates and times. The end must be after the start.</string>
     <string name="ui_staff_app">For supervisors and drivers</string>
     <string name="ui_staff_only">This Android app is for supervisors and drivers. Use the team’s Flutter app for passenger access.</string>
+    <string name="core_fleet_metrics_title">Fleet Status Overview</string>
+    <string name="core_fleet_total_buses">Total: %1$d</string>
+    <string name="core_fleet_in_service">In service: %1$d</string>
+    <string name="core_fleet_attention_needed">Attention: %1$d</string>
+    <string name="core_fleet_over_capacity_count">Over capacity: %1$d</string>
 </resources>
 
 
