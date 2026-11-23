@@ -234,7 +234,7 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
                     tab == Destination.SHIFT -> TripScreen(trip, tracking, account.tripModel::refresh, account.tripModel::activate, account.tripModel::close, requestPermission)
                     tab == Destination.FLEET -> FleetScreen(fleet, account.fleetModel::refresh) { selectedBus = it }
                     tab == Destination.ASSIGNMENTS -> ProvisionScreen(fleet, account.fleetModel::save, account.fleetModel::clearReceipt)
-                    tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, sync, account.syncModel::retry, signOut, language, onLanguage)
+                    tab == Destination.ACCOUNT -> AccountScreen(account.session.role, account.session.userId, application.endpoint, sync, account.syncModel::retry, signOut, language, onLanguage)
                     else -> {
                         val mode = when (tab) {
                             Destination.DRIVER_ALERTS -> SafetyTab.DRIVER_ALERTS
@@ -268,13 +268,14 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         if (bus.shiftId != null && sourceId != null) { { model.clearCredential(); counter = true } } else null, back)
 }
 
-@Composable private fun AccountScreen(role: Role, user: String, sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit, language: String, onLanguage: (String) -> Unit) {
+@Composable private fun AccountScreen(role: Role, user: String, endpoint: String = "", sync: ScreenState<Int?>, retry: () -> Unit, signOut: () -> Unit, language: String, onLanguage: (String) -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     CorePage(R.string.core_account) {
         CoreCard(stringResource(roleLabel(role))) {
             CoreIcon(R.drawable.ic_account_circle)
             Text(stringResource(R.string.core_user_id, user))
         }
+        if (endpoint.isNotBlank()) DiagnosticsCard(endpoint, sync.value ?: 0, Modifier.testTag("accountDiagnostics"))
         Text(stringResource(R.string.ui_account_help))
         LanguageOptions(language, onLanguage)
         Text(stringResource(R.string.core_sync_count, sync.value ?: 0))
