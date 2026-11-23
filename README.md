@@ -229,6 +229,13 @@ Los informes de Gradle quedan en `app/build/reports/tests`, `app/build/reports/a
 
 El paquete conectado es `com.dreamteam.safebus`, organizado en los contextos `iam`, `fleet`, `trip`, `safetycase` y `shared`, con capas `domain`, `data` y `ui`. El backend decide los estados de negocio; la aplicación conserva datos locales cifrados y envíos pendientes para los flujos que admiten reintento.
 
+### Supervisión y Métricas de Flota
+
+La vista de flota del Supervisor incluye un panel de métricas agregadas (`FleetMetricsSummary`):
+- **Total y Unidades en servicio**: Visibilidad del estado operativo en tiempo real (`CURRENT` / `AVAILABLE`).
+- **Alertas y Unidades sobre aforo**: Detección inmediata de sobrecupo (`OVER_CAPACITY`) y casos de emergencia o revisiones pendientes que requieren atención del supervisor.
+- **Filtros rápidos interactivos**: Segmentación por estado de ubicación y condición de ocupación.
+
 El diseño sigue el capítulo 3 del informe: azul principal **#0D2C54**, secundario **#00796B**, rojo de emergencia **#C62828** e Inter, con temas claro y oscuro y textos en español e inglés. Las pantallas heredadas bajo `com.safebus.driver` y los documentos de `docs/` describen el prototipo visual original y no sustituyen esta guía de ejecución conectada.
 
 Limitaciones actuales para la prueba: el mapa y el escáner utilizan aplicaciones externas; el contador manual no sustituye un sensor físico. La recuperación del turno activo depende de su asociación local: borrar los datos de la aplicación elimina esa asociación y el backend actual no ofrece una consulta para reconstruirla automáticamente.
