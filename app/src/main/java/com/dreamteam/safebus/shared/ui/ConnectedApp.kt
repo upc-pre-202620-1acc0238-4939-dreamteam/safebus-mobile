@@ -285,3 +285,16 @@ fun roleLabel(role: Role) = when (role) { Role.DRIVER -> R.string.core_role_driv
         text = { Text(stringResource(R.string.core_sign_out_detail)) }, confirmButton = { TextButton({ confirm = false; signOut() }, Modifier.testTag("confirmRealSignOut")) { Text(stringResource(R.string.core_confirm)) } },
         dismissButton = { TextButton({ confirm = false }) { Text(stringResource(R.string.core_cancel)) } })
 }
+
+@Composable fun DiagnosticsCard(endpoint: String, syncCount: Int, modifier: Modifier = Modifier) {
+    val isLocal = endpoint.contains("10.0.2.2") || endpoint.contains("127.0.0.1") || endpoint.contains("localhost")
+    CoreCard(stringResource(R.string.core_diagnostics_title)) {
+        Text(stringResource(R.string.core_diagnostics_version, "0.1.0", 1), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.core_diagnostics_server, endpoint.trim().removeSuffix("/")), style = MaterialTheme.typography.bodySmall)
+        Text(
+            stringResource(if (isLocal) R.string.core_diagnostics_environment_local else R.string.core_diagnostics_environment_remote),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary
+        )
+    }
+}
