@@ -110,6 +110,40 @@ import java.time.ZoneId
     }
 }
 
+@Composable fun FleetMetricsSummary(metrics: FleetMetrics, modifier: Modifier = Modifier) {
+    CoreCard(stringResource(R.string.core_fleet_metrics_title)) {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.core_small))
+        ) {
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Column(Modifier.padding(dimensionResource(R.dimen.core_small))) {
+                    Text(stringResource(R.string.core_fleet_total_buses, metrics.totalBuses), style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.core_fleet_in_service, metrics.activeBuses), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.small,
+                color = if (metrics.attentionNeededCount > 0) colorResource(R.color.core_container) else MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Column(Modifier.padding(dimensionResource(R.dimen.core_small))) {
+                    Text(
+                        stringResource(R.string.core_fleet_attention_needed, metrics.attentionNeededCount),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (metrics.attentionNeededCount > 0) colorResource(R.color.core_high) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(stringResource(R.string.core_fleet_over_capacity_count, metrics.overCapacityCount), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
 enum class ProvisionForm(val title: Int) {
     BUS(R.string.core_create_bus), DRIVER(R.string.core_create_driver), ROUTE(R.string.core_create_route),
     ASSIGNMENT(R.string.core_create_assignment), CAPACITY(R.string.core_update_capacity)
