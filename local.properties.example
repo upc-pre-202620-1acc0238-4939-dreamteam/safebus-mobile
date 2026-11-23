@@ -1,0 +1,12 @@
+## SafeBus Mobile - Local Environment Configuration Example
+## Copy this file to 'local.properties' and adjust the path to your Android SDK location.
+##
+## Windows standard location:
+## sdk.dir=C\:\\Users\\<YourUser>\\AppData\\Local\\Android\\Sdk
+##
+## Linux standard location:
+## sdk.dir=/home/<youruser>/Android/Sdk
+##
+## macOS standard location:
+## sdk.dir=/Users/<youruser>/Library/Android/sdk
+sdk.dir=C\:\\Users\\Username\\AppData\\Local\\Android\\Sdk

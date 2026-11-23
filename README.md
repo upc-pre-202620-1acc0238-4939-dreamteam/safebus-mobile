@@ -18,7 +18,7 @@ Esta guía corresponde a la versión actual de `develop`, que incluye asignació
 | Dispositivo | Android **8.0 / API 26** o posterior; target SDK **37** |
 | Backend | Repositorio `safebus-api`, JDK 21 y su Maven Wrapper |
 
-En Android Studio, configure **Gradle JDK = JDK 21** y descargue los componentes del SDK desde SDK Manager. `local.properties` debe apuntar a su SDK; Android Studio puede generarlo. No suba rutas locales ni credenciales privadas al repositorio.
+En Android Studio, configure **Gradle JDK = JDK 21** y descargue los componentes del SDK desde SDK Manager. Se incluye la plantilla `local.properties.example` como referencia para configurar `local.properties` con la ruta de su SDK, así como `.env.example` para los parámetros de conexión. No suba rutas locales ni credenciales privadas al repositorio.
 
 Los comandos siguientes usan PowerShell en Windows. En Linux/macOS utilice `./gradlew` y `./mvnw` en lugar de `./gradlew.bat` y `./mvnw.cmd`, y adapte las variables de entorno y rutas.
 
@@ -203,7 +203,9 @@ adb -s $deviceSerial shell pm grant com.dreamteam.safebus android.permission.ACC
 adb -s $deviceSerial shell am instrument -w -e backend true com.dreamteam.safebus.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-La suite de esta revisión tiene **67 pruebas JVM** ejecutadas por `testDebugUnitTest` y **76 pruebas Android e integración**. Sin `backend=true`, las pruebas condicionadas a integración se omiten. Para validar la conexión real, revise que se hayan ejecutado, sin fallos ni omisiones, y no solo el mensaje de compilación. La suite Android incluye pruebas del prototipo conservadas y de la aplicación conectada: acceso exclusivo de personal, calendario/reloj, cancelación, validación de periodos, turnos, emergencias y aforo. Una prueba usa un cliente API externo de pasajeros para verificar que el Supervisor recibe y atiende sus reportes; no ejecuta la aplicación Flutter.
+La suite de esta revisión tiene **67 pruebas JVM** ejecutadas por `testDebugUnitTest` y **77 pruebas Android e integración**. Sin `backend=true`, las pruebas condicionadas a integración se omiten. Para validar la conexión real, revise que se hayan ejecutado, sin fallos ni omisiones, y no solo el mensaje de compilación. La suite Android incluye pruebas del prototipo conservadas y de la aplicación conectada: acceso exclusivo de personal, calendario/reloj, cancelación, validación de periodos, turnos, emergencias y aforo. Una prueba usa un cliente API externo de pasajeros para verificar que el Supervisor recibe y atiende sus reportes; no ejecuta la aplicación Flutter.
+
+`DeployedStaffFlowTest` también permite verificar exclusivamente el recorrido Supervisor → asignación con calendario → Conductor → cierre en Railway mediante `-e class com.dreamteam.safebus.DeployedStaffFlowTest -e deployedStaff true`. Requiere iniciar sesión manualmente como Supervisor antes de ejecutarla y una hora del emulador anterior a las 23:45. Crea recursos identificados con `QA` que permanecen en el servidor, cierra el turno de prueba y termina sin sesión; no emite emergencias. Ejecute esta prueba solo con autorización para crear esos datos, sin habilitar el resto de la suite de integración contra producción.
 
 Los informes de Gradle quedan en `app/build/reports/tests`, `app/build/reports/androidTests/connected` y `app/build/reports/lint-results-*.html`. La ejecución directa con `adb shell am instrument` imprime su resultado en la terminal.
 
@@ -226,6 +228,13 @@ Los informes de Gradle quedan en `app/build/reports/tests`, `app/build/reports/a
 ## Arquitectura y alcance actual
 
 El paquete conectado es `com.dreamteam.safebus`, organizado en los contextos `iam`, `fleet`, `trip`, `safetycase` y `shared`, con capas `domain`, `data` y `ui`. El backend decide los estados de negocio; la aplicación conserva datos locales cifrados y envíos pendientes para los flujos que admiten reintento.
+
+### Diagnóstico del Sistema y Sesión
+
+En la sección de Cuenta (`AccountScreen`), tanto el conductor como el supervisor disponen de una tarjeta de diagnóstico (`DiagnosticsCard`):
+- **Versión y compilación**: Muestra la versión de la aplicación (`0.1.0`) y el número de compilación interno.
+- **Servidor y entorno**: Identifica si la sesión opera contra el entorno de desarrollo local (`10.0.2.2` / `127.0.0.1`) o contra el despliegue en nube (Railway).
+- **Envíos pendientes**: Indica si existen transacciones o evidencias pendientes de sincronizar con el backend.
 
 El diseño sigue el capítulo 3 del informe: azul principal **#0D2C54**, secundario **#00796B**, rojo de emergencia **#C62828** e Inter, con temas claro y oscuro y textos en español e inglés. Las pantallas heredadas bajo `com.safebus.driver` y los documentos de `docs/` describen el prototipo visual original y no sustituyen esta guía de ejecución conectada.
 
