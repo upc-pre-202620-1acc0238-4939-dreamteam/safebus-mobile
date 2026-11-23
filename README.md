@@ -18,7 +18,7 @@ Esta guía corresponde a la versión actual de `develop`, que incluye asignació
 | Dispositivo | Android **8.0 / API 26** o posterior; target SDK **37** |
 | Backend | Repositorio `safebus-api`, JDK 21 y su Maven Wrapper |
 
-En Android Studio, configure **Gradle JDK = JDK 21** y descargue los componentes del SDK desde SDK Manager. `local.properties` debe apuntar a su SDK; Android Studio puede generarlo. No suba rutas locales ni credenciales privadas al repositorio.
+En Android Studio, configure **Gradle JDK = JDK 21** y descargue los componentes del SDK desde SDK Manager. Se incluye la plantilla `local.properties.example` como referencia para configurar `local.properties` con la ruta de su SDK, así como `.env.example` para los parámetros de conexión. No suba rutas locales ni credenciales privadas al repositorio.
 
 Los comandos siguientes usan PowerShell en Windows. En Linux/macOS utilice `./gradlew` y `./mvnw` en lugar de `./gradlew.bat` y `./mvnw.cmd`, y adapte las variables de entorno y rutas.
 
@@ -228,6 +228,13 @@ Los informes de Gradle quedan en `app/build/reports/tests`, `app/build/reports/a
 ## Arquitectura y alcance actual
 
 El paquete conectado es `com.dreamteam.safebus`, organizado en los contextos `iam`, `fleet`, `trip`, `safetycase` y `shared`, con capas `domain`, `data` y `ui`. El backend decide los estados de negocio; la aplicación conserva datos locales cifrados y envíos pendientes para los flujos que admiten reintento.
+
+### Diagnóstico del Sistema y Sesión
+
+En la sección de Cuenta (`AccountScreen`), tanto el conductor como el supervisor disponen de una tarjeta de diagnóstico (`DiagnosticsCard`):
+- **Versión y compilación**: Muestra la versión de la aplicación (`0.1.0`) y el número de compilación interno.
+- **Servidor y entorno**: Identifica si la sesión opera contra el entorno de desarrollo local (`10.0.2.2` / `127.0.0.1`) o contra el despliegue en nube (Railway).
+- **Envíos pendientes**: Indica si existen transacciones o evidencias pendientes de sincronizar con el backend.
 
 El diseño sigue el capítulo 3 del informe: azul principal **#0D2C54**, secundario **#00796B**, rojo de emergencia **#C62828** e Inter, con temas claro y oscuro y textos en español e inglés. Las pantallas heredadas bajo `com.safebus.driver` y los documentos de `docs/` describen el prototipo visual original y no sustituyen esta guía de ejecución conectada.
 
