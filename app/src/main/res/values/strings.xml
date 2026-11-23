@@ -313,6 +313,11 @@
     <string name="ui_assignment_dates_invalid">Select both dates and times. The end must be after the start.</string>
     <string name="ui_staff_app">For supervisors and drivers</string>
     <string name="ui_staff_only">This Android app is for supervisors and drivers. Use the team’s Flutter app for passenger access.</string>
+    <string name="core_diagnostics_title">System Diagnostics</string>
+    <string name="core_diagnostics_version">App Version: %1$s (%2$d)</string>
+    <string name="core_diagnostics_server">Server: %1$s</string>
+    <string name="core_diagnostics_environment_local">Local Development Server</string>
+    <string name="core_diagnostics_environment_remote">Cloud Production Server</string>
 </resources>
 
 
