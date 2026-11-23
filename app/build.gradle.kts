@@ -1,7 +1,26 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
+}
+fun keystoreProperty(name: String): String = keystoreProperties.getProperty(name)
+    ?: throw GradleException("keystore.properties no define la clave '$name'. Revise keystore.properties.example.")
+val requireKeystoreProperties = tasks.register("requireKeystoreProperties") {
+    doLast {
+        if (!keystorePropertiesFile.exists()) {
+            throw GradleException(
+                "Falta keystore.properties en ${rootProject.projectDir}. " +
+                    "Copie keystore.properties.example a keystore.properties y complete los datos del keystore de release."
+            )
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(requireKeystoreProperties) }
 android {
     namespace = "com.dreamteam.safebus"
     compileSdk { version = release(37) }
@@ -18,11 +37,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true; buildConfig = true }
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperty("storeFile"))
+                storePassword = keystoreProperty("storePassword")
+                keyAlias = keystoreProperty("keyAlias")
+                keyPassword = keystoreProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         val configured = providers.gradleProperty("safebusApiUrl")
         fun literal(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
         debug { buildConfigField("String", "API_BASE_URL", literal(configured.orElse("http://10.0.2.2:8080").get())) }
-        release { buildConfigField("String", "API_BASE_URL", literal(configured.orElse("").get())) }
+        release {
+            buildConfigField("String", "API_BASE_URL", literal(configured.orElse("").get()))
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
     // Keep both bundled languages available to the in-app language selector.
     bundle { language { enableSplit = false } }
